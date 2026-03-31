@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <title>School IT Tickets</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,700;1,9..40,400&family=Outfit:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <nav class="main-nav" aria-label="Main sections">
+        <a href="/" aria-current="page">Tickets</a>
+        <a href="/devices">Devices</a>
+        <a href="/reports">Reports</a>
+      </nav>
+
+      <header class="app-header">
+        <div class="brand">
+          <strong>School IT Tickets</strong>
+          <span>Log and track issues — Abitti, hardware, accounts, and more</span>
+        </div>
+        <div class="header-actions">
+          <button type="button" class="theme-toggle" id="themeToggle" title="Toggle theme">🌙</button>
+          <button type="button" class="btn btn-primary" id="btnNew">＋ New ticket</button>
+        </div>
+      </header>
+
+      <section>
+        <h2 style="margin: 0 0 0.75rem">All tickets</h2>
+        <div class="filters">
+          <label>
+            Search
+            <input type="search" id="fQ" placeholder="Title, description, name…" />
+          </label>
+          <label>
+            Status
+            <select id="fStatus">
+              <option value="">Any</option>
+              <option value="open">Open</option>
+              <option value="closed">Closed</option>
+              <option value="unresolved">Unresolved</option>
+            </select>
+          </label>
+          <label>
+            Category
+            <select id="fCategory">
+              <option value="">Any</option>
+              <option value="abitti">Abitti</option>
+              <option value="hardware">Hardware</option>
+              <option value="software">Software</option>
+              <option value="network">Network</option>
+              <option value="account">Account</option>
+              <option value="other">Other</option>
+            </select>
+          </label>
+          <label>
+            Priority
+            <select id="fPriority">
+              <option value="">Any</option>
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+              <option value="na">N/A</option>
+            </select>
+          </label>
+          <label>
+            Reporter
+            <input type="text" id="fReporter" placeholder="Name or type" />
+          </label>
+          <label>
+            Tag
+            <input type="text" id="fTag" list="tagList" placeholder="Filter by tag" />
+            <datalist id="tagList"></datalist>
+          </label>
+          <label>
+            From date
+            <input type="date" id="fFrom" />
+          </label>
+          <label>
+            To date
+            <input type="date" id="fTo" />
+          </label>
+          <label>
+            Sort
+            <select id="fSort">
+              <option value="created">Newest created</option>
+              <option value="updated">Recently updated</option>
+            </select>
+          </label>
+        </div>
+        <div class="table-wrap">
+          <table class="tickets">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Reporter</th>
+                <th>Category</th>
+                <th>Device</th>
+                <th>Priority</th>
+                <th>Status</th>
+                <th>Updated</th>
+              </tr>
+            </thead>
+            <tbody id="ticketRows">
+              <tr>
+                <td colspan="8" class="empty-state">Loading…</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <div id="print-area"></div>
+
+    <div class="modal-backdrop" id="modalBackdrop" hidden role="dialog" aria-modal="true">
+      <div class="modal" id="ticketModal">
+        <div class="modal-head">
+          <h2 id="modalTitle">Ticket</h2>
+          <button type="button" class="btn btn-ghost no-print" id="modalClose" aria-label="Close">✕</button>
+        </div>
+        <div class="modal-body">
+          <form id="ticketForm" class="form-grid">
+            <input type="hidden" id="ticketId" />
+            <label>
+              Title / short description *
+              <input type="text" id="title" required maxlength="500" />
+            </label>
+            <label>
+              Detailed description *
+              <textarea id="description" required></textarea>
+            </label>
+            <div class="form-row-2">
+              <label>
+                Reporter type *
+                <select id="reporterType" required>
+                  <option value="pupil">Pupil</option>
+                  <option value="staff">Staff</option>
+                  <option value="unknown">Unknown</option>
+                  <option value="na">N/A</option>
+                </select>
+              </label>
+              <label>
+                Reporter name
+                <input type="text" id="reporterName" placeholder="Optional but recommended" />
+              </label>
+            </div>
+            <div class="form-row-2">
+              <label>
+                Category *
+                <select id="category" required>
+                  <option value="abitti">Abitti</option>
+                  <option value="hardware">Hardware</option>
+                  <option value="software">Software</option>
+                  <option value="network">Network</option>
+                  <option value="account">Account</option>
+                  <option value="other">Other</option>
+                </select>
+              </label>
+              <label>
+                Priority *
+                <select id="priority" required>
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="na">N/A</option>
+                </select>
+              </label>
+            </div>
+            <label id="hardwareRow" hidden>
+              Device
+              <select id="hardwareDevice">
+                <option value="">— Optional: select device —</option>
+              </select>
+            </label>
+            <p id="hardwareHint" class="form-hint" hidden style="margin: 0; font-size: 0.8rem; color: var(--muted)">
+              Register devices (and brands) under <a href="/devices">Devices</a>. Each option includes type and brand.
+            </p>
+            <label id="statusWrap">
+              Status *
+              <select id="status">
+                <option value="open">Open</option>
+                <option value="closed">Closed</option>
+                <option value="unresolved">Unresolved</option>
+              </select>
+            </label>
+            <label id="resolutionWrap" hidden>
+              What solved it (optional)
+              <textarea
+                id="resolution"
+                rows="3"
+                placeholder="e.g. command you ran, driver or patch, hardware fix, workaround…"
+              ></textarea>
+            </label>
+            <label>
+              Tags (comma-separated)
+              <input type="text" id="tags" placeholder="e.g. laptop, lab-3, urgent-followup" />
+            </label>
+            <div id="detailExtras" hidden>
+              <p style="margin: 0; font-size: 0.85rem; color: var(--muted)">
+                <span id="datesLine"></span><br />
+                Public link:
+                <a id="publicLink" href="#" target="_blank" rel="noopener"></a>
+              </p>
+              <div class="qr-block no-print">
+                <img id="qrImg" alt="Ticket QR code" width="200" height="200" />
+                <small>Scan to open this ticket on a phone</small>
+              </div>
+              <div class="no-print">
+                <strong style="font-size: 0.85rem">Attachments</strong>
+                <ul class="attach-list" id="attachList"></ul>
+                <label style="margin-top: 0.5rem">
+                  Upload file
+                  <input type="file" id="attachFile" style="margin-top: 0.25rem" />
+                </label>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-foot no-print">
+          <button type="button" class="btn btn-danger" id="btnDelete" hidden>Delete ticket</button>
+          <button type="button" class="btn" id="btnPrint" hidden>Print ticket</button>
+          <button type="button" class="btn" id="modalCancel">Cancel</button>
+          <button type="submit" form="ticketForm" class="btn btn-primary" id="btnSave">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="/js/app.js"></script>
+  </body>
+</html>

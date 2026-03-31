@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <title>Reports — School IT Tickets</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,700&family=Outfit:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <nav class="main-nav" aria-label="Main sections">
+        <a href="/">Tickets</a>
+        <a href="/devices">Devices</a>
+        <a href="/reports" aria-current="page">Reports</a>
+      </nav>
+
+      <header class="app-header">
+        <div class="brand">
+          <strong>Reports</strong>
+          <span>Overview, periods, and exports</span>
+        </div>
+        <div class="header-actions">
+          <button type="button" class="theme-toggle" id="themeToggle" title="Toggle theme">🌙</button>
+        </div>
+      </header>
+
+      <section class="grid-dash" id="dashboard" aria-label="Dashboard"></section>
+
+      <section class="card reports-panel">
+        <h2 style="margin-bottom: 0.75rem">Period summary</h2>
+        <div class="tabs" role="tablist">
+          <button type="button" class="tab" data-period="daily" role="tab">Daily</button>
+          <button type="button" class="tab" data-period="weekly" role="tab">Weekly</button>
+          <button type="button" class="tab" data-period="monthly" role="tab" aria-selected="true">Monthly</button>
+        </div>
+        <p class="report-meta" id="reportMeta"></p>
+        <div id="reportSummary"></div>
+        <div class="report-actions">
+          <button type="button" class="btn btn-primary" id="exportCsv">Export CSV</button>
+          <button type="button" class="btn" id="exportPdf">Export PDF</button>
+        </div>
+      </section>
+    </div>
+    <script src="/js/reports.js"></script>
+  </body>
+</html>
