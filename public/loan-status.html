@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <title data-i18n="loanDocTitle">Loan computers — School IT Tickets</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,700&family=Outfit:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/loan.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <nav class="main-nav" aria-label="Main sections">
+        <a href="/" data-i18n="navTickets">Tickets</a>
+        <a href="/devices" data-i18n="navDevices">Devices</a>
+        <a href="/reports" data-i18n="navReports">Reports</a>
+        <a href="/loan-computers" data-i18n="navLoan">Loan computers</a>
+      </nav>
+
+      <header class="app-header">
+        <div class="brand">
+          <strong data-i18n="loanPageTitle">Loan computers</strong>
+          <span data-i18n="loanPageSubtitle">Overview — availability and active loans</span>
+        </div>
+        <div class="header-actions">
+          <label class="lang-select-wrap" style="display: flex; align-items: center; gap: 0.35rem; font-size: 0.85rem; color: var(--muted)">
+            <span data-i18n="langLabel">Language</span>
+            <select id="langSelect" class="lang-select" aria-label="Language">
+              <option value="en" data-i18n="langEn">English</option>
+              <option value="sv" data-i18n="langSv">Svenska</option>
+            </select>
+          </label>
+          <button type="button" class="theme-toggle" id="themeToggle" data-i18n-title="themeToggleTitle" title="Toggle theme">🌙</button>
+          <button type="button" class="btn" id="btnRefresh" data-i18n="loanRefresh">Refresh</button>
+        </div>
+      </header>
+
+      <nav class="loan-subnav" aria-label="Loan computers sections">
+        <a href="/loan-computers" data-loan-overview data-i18n="loanSubOverview">Overview</a>
+        <a href="/loan-computers/manage" data-i18n="loanSubManage">Manage inventory</a>
+        <a href="/loan-computers/kiosk" data-i18n="loanSubKiosk">Borrow (kiosk)</a>
+        <a href="/loan-computers/history" data-i18n="loanSubHistory">History</a>
+      </nav>
+
+      <section class="card">
+        <h2 style="margin-top: 0" data-i18n="loanActiveLoans">Active loans</h2>
+        <p style="color: var(--muted); font-size: 0.9rem; margin: 0 0 0.75rem" data-i18n="loanReturnHint">
+          Returning frees the main item and any charger borrowed together.
+        </p>
+        <div class="loan-table-wrap">
+          <table class="loan-table" id="tableActive">
+            <thead>
+              <tr>
+                <th data-i18n="loanThSince">Since</th>
+                <th data-i18n="loanThBorrower">Borrower</th>
+                <th data-i18n="loanThRole">Role</th>
+                <th data-i18n="loanThMainItem">Main item</th>
+                <th data-i18n="loanThCharger">Charger</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="tbodyActive"></tbody>
+          </table>
+        </div>
+        <p id="activeEmpty" style="color: var(--muted); display: none" data-i18n="loanNoActive">No active loans.</p>
+      </section>
+
+      <section class="card loan-all-equipment-card" style="margin-top: 1.25rem">
+        <div class="loan-all-equipment-head">
+          <h2 style="margin-top: 0" data-i18n="loanAllEquipment">All equipment</h2>
+          <div
+            class="loan-view-toggle"
+            role="group"
+            data-i18n-aria="loanViewToggleAria"
+            aria-label="Equipment layout"
+          >
+            <button
+              type="button"
+              id="btnViewList"
+              class="loan-view-toggle-btn"
+              aria-pressed="true"
+              data-i18n-title="loanViewListTitle"
+              data-i18n-aria="loanViewListTitle"
+              title="List view"
+            >
+              <svg class="loan-view-toggle-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path
+                  fill="currentColor"
+                  d="M4 6a1 1 0 011-1h14a1 1 0 110 2H5a1 1 0 01-1-1zm0 5a1 1 0 011-1h14a1 1 0 110 2H5a1 1 0 01-1-1zm0 5a1 1 0 011-1h14a1 1 0 110 2H5a1 1 0 01-1-1z"
+                />
+              </svg>
+            </button>
+            <button
+              type="button"
+              id="btnViewIcons"
+              class="loan-view-toggle-btn"
+              aria-pressed="false"
+              data-i18n-title="loanViewIconsTitle"
+              data-i18n-aria="loanViewIconsTitle"
+              title="Icon view"
+            >
+              <svg class="loan-view-toggle-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path
+                  fill="currentColor"
+                  d="M4 5a2 2 0 012-2h4a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm10 0a2 2 0 012-2h4a2 2 0 012 2v4a2 2 0 01-2 2h-4a2 2 0 01-2-2V5zM4 15a2 2 0 012-2h4a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zm10 0a2 2 0 012-2h4a2 2 0 012 2v4a2 2 0 01-2 2h-4a2 2 0 01-2-2v-4z"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div id="loanAllListWrap" class="loan-all-list-wrap">
+          <div class="loan-table-wrap">
+            <table class="loan-table" id="tableAll">
+              <thead>
+                <tr>
+                  <th data-i18n="loanColType">Type</th>
+                  <th data-i18n="loanColName">Name</th>
+                  <th data-i18n="loanColStatus">Status</th>
+                  <th data-i18n="loanColWith">With</th>
+                </tr>
+              </thead>
+              <tbody id="tbodyAll"></tbody>
+            </table>
+          </div>
+        </div>
+        <div id="loanAllIconsWrap" class="loan-all-icons-wrap" hidden>
+          <div id="loanAllIconsGrid" class="loan-equip-icon-grid"></div>
+        </div>
+      </section>
+    </div>
+    <script src="/js/i18n.js"></script>
+    <script src="/js/theme.js"></script>
+    <script src="/js/loan-datetime.js"></script>
+    <script src="/js/loan-status.js"></script>
+  </body>
+</html>

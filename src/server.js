@@ -33,7 +33,7 @@ const upload = multer({
 
 const app = express();
 app.use(cors());
-app.use(express.json({ limit: '2mb' }));
+app.use(express.json({ limit: '1mb' }));
 
 function parseTagsBody(body) {
   if (Array.isArray(body.tags)) return body.tags;
@@ -247,6 +247,76 @@ app.delete('/api/devices/:id(\\d+)', (req, res) => {
   const ok = db.deleteDevice(Number(req.params.id));
   if (!ok) return res.status(404).json({ error: 'Not found' });
   res.status(204).end();
+});
+
+/** ---------- Loan computers ---------- */
+app.get('/api/loan/assets', (req, res) => {
+  try {
+    const kind = req.query.kind;
+    const rows = db.listLoanAssets(
+      kind === 'computer' || kind === 'charger' || kind === 'other' ? kind : undefined
+    );
+    res.json(rows);
+  } catch (e) {
+    res.status(500).json({ error: String(e.message) });
+  }
+});
+
+app.post('/api/loan/assets', (req, res) => {
+  try {
+    const row = db.createLoanAsset(req.body.kind, req.body.name);
+    if (!row) return res.status(400).json({ error: 'Invalid kind or name' });
+    res.status(201).json(row);
+  } catch (e) {
+    res.status(500).json({ error: String(e.message) });
+  }
+});
+
+app.delete('/api/loan/assets/:id(\\d+)', (req, res) => {
+  try {
+    const r = db.deleteLoanAsset(Number(req.params.id));
+    if (!r.ok) return res.status(400).json({ error: r.error || 'Cannot delete' });
+    res.status(204).end();
+  } catch (e) {
+    res.status(500).json({ error: String(e.message) });
+  }
+});
+
+app.get('/api/loan/status', (_req, res) => {
+  try {
+    res.json(db.getLoanStatus());
+  } catch (e) {
+    res.status(500).json({ error: String(e.message) });
+  }
+});
+
+app.get('/api/loan/history', (req, res) => {
+  try {
+    const rows = db.listLoanHistory(req.query.limit);
+    res.json(rows);
+  } catch (e) {
+    res.status(500).json({ error: String(e.message) });
+  }
+});
+
+app.post('/api/loan/checkout', (req, res) => {
+  try {
+    const r = db.createLoanCheckout(req.body);
+    if (!r.ok) return res.status(400).json({ error: r.error || 'Checkout failed' });
+    res.status(201).json({ id: r.id });
+  } catch (e) {
+    res.status(500).json({ error: String(e.message) });
+  }
+});
+
+app.post('/api/loan/return/:id(\\d+)', (req, res) => {
+  try {
+    const r = db.returnLoanCheckout(Number(req.params.id));
+    if (!r.ok) return res.status(400).json({ error: r.error || 'Return failed' });
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: String(e.message) });
+  }
 });
 
 /** ---------- Attachments ---------- */
@@ -511,6 +581,21 @@ app.get('*', (req, res, next) => {
   }
   if (req.path === '/devices' || req.path === '/devices/') {
     return res.sendFile(path.join(publicDir, 'devices.html'));
+  }
+  if (req.path === '/loan-computers' || req.path === '/loan-computers/') {
+    return res.sendFile(path.join(publicDir, 'loan-status.html'));
+  }
+  if (req.path === '/loan-computers/manage' || req.path === '/loan-computers/manage/') {
+    return res.sendFile(path.join(publicDir, 'loan-manage.html'));
+  }
+  if (req.path === '/loan-computers/kiosk' || req.path === '/loan-computers/kiosk/') {
+    return res.sendFile(path.join(publicDir, 'loan-kiosk.html'));
+  }
+  if (req.path === '/loan-computers/status' || req.path === '/loan-computers/status/') {
+    return res.sendFile(path.join(publicDir, 'loan-status.html'));
+  }
+  if (req.path === '/loan-computers/history' || req.path === '/loan-computers/history/') {
+    return res.sendFile(path.join(publicDir, 'loan-history.html'));
   }
   res.sendFile(path.join(publicDir, 'index.html'));
 });

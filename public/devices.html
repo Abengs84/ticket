@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <title>Devices — School IT Tickets</title>
+    <title data-i18n="devDocTitle">Devices — School IT Tickets</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -16,35 +16,43 @@
   <body>
     <div class="wrap">
       <nav class="main-nav" aria-label="Main sections">
-        <a href="/">Tickets</a>
-        <a href="/devices" aria-current="page">Devices</a>
-        <a href="/reports">Reports</a>
+        <a href="/" data-i18n="navTickets">Tickets</a>
+        <a href="/devices" aria-current="page" data-i18n="navDevices">Devices</a>
+        <a href="/reports" data-i18n="navReports">Reports</a>
+        <a href="/loan-computers" data-i18n="navLoan">Loan computers</a>
       </nav>
 
       <header class="app-header">
         <div class="brand">
-          <strong>Devices &amp; brands</strong>
-          <span>Manage hardware inventory for hardware tickets</span>
+          <strong data-i18n="devPageTitle">Devices &amp; brands</strong>
+          <span data-i18n="devPageSubtitle">Manage hardware inventory for hardware tickets</span>
         </div>
         <div class="header-actions">
-          <button type="button" class="theme-toggle" id="themeToggle" title="Toggle theme">🌙</button>
+          <label class="lang-select-wrap" style="display: flex; align-items: center; gap: 0.35rem; font-size: 0.85rem; color: var(--muted)">
+            <span data-i18n="langLabel">Language</span>
+            <select id="langSelect" class="lang-select" aria-label="Language">
+              <option value="en" data-i18n="langEn">English</option>
+              <option value="sv" data-i18n="langSv">Svenska</option>
+            </select>
+          </label>
+          <button type="button" class="theme-toggle" id="themeToggle" data-i18n-title="themeToggleTitle" title="Toggle theme">🌙</button>
         </div>
       </header>
 
       <section class="card" style="margin-bottom: 1.5rem">
-        <h2 style="margin-top: 0">Brands</h2>
+        <h2 style="margin-top: 0" data-i18n="devBrandsH2">Brands</h2>
         <form id="brandForm" class="form-row-2" style="align-items: end; margin-bottom: 1rem">
           <label>
-            New brand name
-            <input type="text" id="brandNameInput" placeholder="e.g. HP, Dell, Canon" />
+            <span data-i18n="devNewBrandLabel">New brand name</span>
+            <input type="text" id="brandNameInput" data-i18n-placeholder="devNewBrandPh" placeholder="e.g. HP, Dell, Canon" />
           </label>
-          <button type="submit" class="btn btn-primary">Add brand</button>
+          <button type="submit" class="btn btn-primary" data-i18n="devAddBrand">Add brand</button>
         </form>
         <div class="table-wrap">
           <table class="tickets">
             <thead>
               <tr>
-                <th>Name</th>
+                <th data-i18n="devThName">Name</th>
                 <th></th>
               </tr>
             </thead>
@@ -54,40 +62,40 @@
       </section>
 
       <section class="card">
-        <h2 style="margin-top: 0">Devices</h2>
-        <p style="margin: 0 0 1rem; font-size: 0.9rem; color: var(--muted)">
+        <h2 style="margin-top: 0" data-i18n="devDevicesH2">Devices</h2>
+        <p style="margin: 0 0 1rem; font-size: 0.9rem; color: var(--muted)" data-i18n="devDevicesBlurb">
           Type: printer, computer, peripheral, or other. Each device is linked to a brand.
         </p>
         <form id="deviceForm" class="form-grid" style="margin-bottom: 1rem">
           <div class="form-row-2">
             <label>
-              Type *
+              <span data-i18n="devTypeLabel">Type *</span>
               <select id="devType" required>
-                <option value="printer">Printer</option>
-                <option value="computer">Computer</option>
-                <option value="peripheral">Peripheral</option>
-                <option value="other">Other</option>
+                <option value="printer" data-i18n="typePrinter">Printer</option>
+                <option value="computer" data-i18n="typeComputer">Computer</option>
+                <option value="peripheral" data-i18n="typePeripheral">Peripheral</option>
+                <option value="other" data-i18n="typeOther">Other</option>
               </select>
             </label>
             <label>
-              Brand *
+              <span data-i18n="devBrandLabel">Brand *</span>
               <select id="devBrandId" required></select>
             </label>
           </div>
           <label>
-            Label / note (optional)
-            <input type="text" id="devLabel" placeholder="e.g. Lab 3, Main office MFP" />
+            <span data-i18n="devLabelNote">Label / note (optional)</span>
+            <input type="text" id="devLabel" data-i18n-placeholder="devLabelPh" placeholder="e.g. Lab 3, Main office MFP" />
           </label>
-          <button type="submit" class="btn btn-primary" id="deviceSubmitBtn">Add device</button>
-          <button type="button" class="btn" id="deviceCancelEdit" hidden>Cancel edit</button>
+          <button type="submit" class="btn btn-primary" id="deviceSubmitBtn" data-i18n="devAddDevice">Add device</button>
+          <button type="button" class="btn" id="deviceCancelEdit" hidden data-i18n="devCancelEdit">Cancel edit</button>
         </form>
         <div class="table-wrap">
           <table class="tickets">
             <thead>
               <tr>
-                <th>Type</th>
-                <th>Brand</th>
-                <th>Label</th>
+                <th data-i18n="devThType">Type</th>
+                <th data-i18n="devThBrand">Brand</th>
+                <th data-i18n="devThLabel">Label</th>
                 <th></th>
               </tr>
             </thead>
@@ -96,6 +104,7 @@
         </div>
       </section>
     </div>
+    <script src="/js/i18n.js"></script>
     <script src="/js/devices.js"></script>
   </body>
 </html>

@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <title>Reports — School IT Tickets</title>
+    <title data-i18n="repDocTitle">Reports — School IT Tickets</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -16,38 +16,47 @@
   <body>
     <div class="wrap">
       <nav class="main-nav" aria-label="Main sections">
-        <a href="/">Tickets</a>
-        <a href="/devices">Devices</a>
-        <a href="/reports" aria-current="page">Reports</a>
+        <a href="/" data-i18n="navTickets">Tickets</a>
+        <a href="/devices" data-i18n="navDevices">Devices</a>
+        <a href="/reports" aria-current="page" data-i18n="navReports">Reports</a>
+        <a href="/loan-computers" data-i18n="navLoan">Loan computers</a>
       </nav>
 
       <header class="app-header">
         <div class="brand">
-          <strong>Reports</strong>
-          <span>Overview, periods, and exports</span>
+          <strong data-i18n="repPageTitle">Reports</strong>
+          <span data-i18n="repPageSubtitle">Overview, periods, and exports</span>
         </div>
         <div class="header-actions">
-          <button type="button" class="theme-toggle" id="themeToggle" title="Toggle theme">🌙</button>
+          <label class="lang-select-wrap" style="display: flex; align-items: center; gap: 0.35rem; font-size: 0.85rem; color: var(--muted)">
+            <span data-i18n="langLabel">Language</span>
+            <select id="langSelect" class="lang-select" aria-label="Language">
+              <option value="en" data-i18n="langEn">English</option>
+              <option value="sv" data-i18n="langSv">Svenska</option>
+            </select>
+          </label>
+          <button type="button" class="theme-toggle" id="themeToggle" data-i18n-title="themeToggleTitle" title="Toggle theme">🌙</button>
         </div>
       </header>
 
-      <section class="grid-dash" id="dashboard" aria-label="Dashboard"></section>
+      <section class="grid-dash" id="dashboard" data-i18n-aria="dashAria" aria-label="Dashboard"></section>
 
       <section class="card reports-panel">
-        <h2 style="margin-bottom: 0.75rem">Period summary</h2>
+        <h2 style="margin-bottom: 0.75rem" data-i18n="repPeriodSummary">Period summary</h2>
         <div class="tabs" role="tablist">
-          <button type="button" class="tab" data-period="daily" role="tab">Daily</button>
-          <button type="button" class="tab" data-period="weekly" role="tab">Weekly</button>
-          <button type="button" class="tab" data-period="monthly" role="tab" aria-selected="true">Monthly</button>
+          <button type="button" class="tab" data-period="daily" role="tab" data-i18n="repTabDaily">Daily</button>
+          <button type="button" class="tab" data-period="weekly" role="tab" data-i18n="repTabWeekly">Weekly</button>
+          <button type="button" class="tab" data-period="monthly" role="tab" aria-selected="true" data-i18n="repTabMonthly">Monthly</button>
         </div>
         <p class="report-meta" id="reportMeta"></p>
         <div id="reportSummary"></div>
         <div class="report-actions">
-          <button type="button" class="btn btn-primary" id="exportCsv">Export CSV</button>
-          <button type="button" class="btn" id="exportPdf">Export PDF</button>
+          <button type="button" class="btn btn-primary" id="exportCsv" data-i18n="repExportCsv">Export CSV</button>
+          <button type="button" class="btn" id="exportPdf" data-i18n="repExportPdf">Export PDF</button>
         </div>
       </section>
     </div>
+    <script src="/js/i18n.js"></script>
     <script src="/js/reports.js"></script>
   </body>
 </html>

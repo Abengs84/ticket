@@ -151,6 +151,164 @@ function migrateResolutionColumnIfNeeded() {
 }
 migrateResolutionColumnIfNeeded();
 
+function initLoanSchema() {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS loan_assets (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      kind TEXT NOT NULL CHECK(kind IN ('computer', 'charger', 'other')),
+      name TEXT NOT NULL,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_loan_assets_kind ON loan_assets(kind);
+
+    CREATE TABLE IF NOT EXISTS loan_checkouts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      computer_asset_id INTEGER NOT NULL REFERENCES loan_assets(id),
+      charger_asset_id INTEGER REFERENCES loan_assets(id),
+      borrower_name TEXT NOT NULL,
+      borrower_role TEXT NOT NULL CHECK(borrower_role IN ('pupil', 'staff', 'other')),
+      signature_png BLOB,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      returned_at TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_loan_checkouts_returned ON loan_checkouts(returned_at);
+    CREATE INDEX IF NOT EXISTS idx_loan_checkouts_computer ON loan_checkouts(computer_asset_id);
+  `);
+}
+initLoanSchema();
+
+/** Allow NULL signatures (signatures optional / removed from UI). */
+function migrateLoanSignatureOptionalIfNeeded() {
+  const t = db.prepare(`SELECT sql FROM sqlite_master WHERE type='table' AND name='loan_checkouts'`).get();
+  if (!t || !t.sql) return;
+  if (!t.sql.includes('signature_png BLOB NOT NULL')) return;
+
+  const rows = db.prepare('SELECT * FROM loan_checkouts').all();
+  db.exec('PRAGMA foreign_keys = OFF');
+  db.exec('BEGIN TRANSACTION');
+  db.exec('DROP TABLE loan_checkouts');
+  db.exec(`
+    CREATE TABLE loan_checkouts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      computer_asset_id INTEGER NOT NULL REFERENCES loan_assets(id),
+      charger_asset_id INTEGER REFERENCES loan_assets(id),
+      borrower_name TEXT NOT NULL,
+      borrower_role TEXT NOT NULL CHECK(borrower_role IN ('pupil', 'staff', 'other')),
+      signature_png BLOB,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      returned_at TEXT
+    );
+    CREATE INDEX idx_loan_checkouts_returned ON loan_checkouts(returned_at);
+    CREATE INDEX idx_loan_checkouts_computer ON loan_checkouts(computer_asset_id);
+  `);
+  const ins = db.prepare(
+    `INSERT INTO loan_checkouts (
+      id, computer_asset_id, charger_asset_id, borrower_name, borrower_role, signature_png, created_at, returned_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+  );
+  for (const c of rows) {
+    ins.run(
+      c.id,
+      c.computer_asset_id,
+      c.charger_asset_id,
+      c.borrower_name,
+      c.borrower_role,
+      c.signature_png,
+      c.created_at,
+      c.returned_at
+    );
+  }
+  db.exec('COMMIT');
+  db.exec('PRAGMA foreign_keys = ON');
+  const maxC = db.prepare('SELECT COALESCE(MAX(id), 0) AS m FROM loan_checkouts').get().m;
+  try {
+    db.prepare('DELETE FROM sqlite_sequence WHERE name = ?').run('loan_checkouts');
+    if (maxC) db.prepare('INSERT INTO sqlite_sequence (name, seq) VALUES (?, ?)').run('loan_checkouts', maxC);
+  } catch (_e) {
+    /* ignore */
+  }
+}
+migrateLoanSignatureOptionalIfNeeded();
+
+/** Rebuild loan tables so CHECK allows kind "other" (existing DBs created before that). */
+function migrateLoanAssetsOtherKindIfNeeded() {
+  const t = db.prepare(`SELECT sql FROM sqlite_master WHERE type='table' AND name='loan_assets'`).get();
+  if (!t || !t.sql) return;
+  if (t.sql.includes("'other'")) return;
+
+  const assets = db.prepare('SELECT * FROM loan_assets').all();
+  const checkouts = db.prepare('SELECT * FROM loan_checkouts').all();
+
+  db.exec('PRAGMA foreign_keys = OFF');
+  db.exec('BEGIN TRANSACTION');
+  db.exec('DROP TABLE IF EXISTS loan_checkouts');
+  db.exec('DROP TABLE IF EXISTS loan_assets');
+  db.exec(`
+    CREATE TABLE loan_assets (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      kind TEXT NOT NULL CHECK(kind IN ('computer', 'charger', 'other')),
+      name TEXT NOT NULL,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX idx_loan_assets_kind ON loan_assets(kind);
+    CREATE TABLE loan_checkouts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      computer_asset_id INTEGER NOT NULL REFERENCES loan_assets(id),
+      charger_asset_id INTEGER REFERENCES loan_assets(id),
+      borrower_name TEXT NOT NULL,
+      borrower_role TEXT NOT NULL CHECK(borrower_role IN ('pupil', 'staff', 'other')),
+      signature_png BLOB,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      returned_at TEXT
+    );
+    CREATE INDEX idx_loan_checkouts_returned ON loan_checkouts(returned_at);
+    CREATE INDEX idx_loan_checkouts_computer ON loan_checkouts(computer_asset_id);
+  `);
+
+  const insA = db.prepare(
+    'INSERT INTO loan_assets (id, kind, name, sort_order, created_at) VALUES (?, ?, ?, ?, ?)'
+  );
+  for (const a of assets) {
+    insA.run(a.id, a.kind, a.name, a.sort_order, a.created_at);
+  }
+
+  const insC = db.prepare(
+    `INSERT INTO loan_checkouts (
+      id, computer_asset_id, charger_asset_id, borrower_name, borrower_role, signature_png, created_at, returned_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+  );
+  for (const c of checkouts) {
+    insC.run(
+      c.id,
+      c.computer_asset_id,
+      c.charger_asset_id,
+      c.borrower_name,
+      c.borrower_role,
+      c.signature_png,
+      c.created_at,
+      c.returned_at
+    );
+  }
+
+  db.exec('COMMIT');
+  db.exec('PRAGMA foreign_keys = ON');
+
+  const maxA = db.prepare('SELECT COALESCE(MAX(id), 0) AS m FROM loan_assets').get().m;
+  const maxC = db.prepare('SELECT COALESCE(MAX(id), 0) AS m FROM loan_checkouts').get().m;
+  try {
+    db.prepare('DELETE FROM sqlite_sequence WHERE name IN (?, ?)').run('loan_assets', 'loan_checkouts');
+    if (maxA)
+      db.prepare('INSERT INTO sqlite_sequence (name, seq) VALUES (?, ?)').run('loan_assets', maxA);
+    if (maxC)
+      db.prepare('INSERT INTO sqlite_sequence (name, seq) VALUES (?, ?)').run('loan_checkouts', maxC);
+  } catch (_e) {
+    /* ignore if sqlite_sequence missing */
+  }
+}
+migrateLoanAssetsOtherKindIfNeeded();
+
 const { randomUUID } = require('crypto');
 
 function deviceFromRow(row) {
@@ -537,6 +695,185 @@ function deleteDevice(id) {
   return info.changes > 0;
 }
 
+/** ---------- Loan computers ---------- */
+function listLoanAssets(kind) {
+  let sql = 'SELECT id, kind, name, sort_order, created_at FROM loan_assets';
+  const params = [];
+  if (kind === 'computer' || kind === 'charger' || kind === 'other') {
+    sql += ' WHERE kind = ?';
+    params.push(kind);
+  }
+  sql += ' ORDER BY kind, sort_order, name COLLATE NOCASE';
+  return db.prepare(sql).all(...params);
+}
+
+function createLoanAsset(kind, name) {
+  const k = String(kind || '').toLowerCase();
+  if (k !== 'computer' && k !== 'charger' && k !== 'other') return null;
+  const n = String(name || '').trim();
+  if (!n) return null;
+  const maxSort =
+    db.prepare('SELECT COALESCE(MAX(sort_order), 0) AS m FROM loan_assets WHERE kind = ?').get(k)
+      .m || 0;
+  const info = db
+    .prepare(
+      'INSERT INTO loan_assets (kind, name, sort_order) VALUES (?, ?, ?)'
+    )
+    .run(k, n, maxSort + 1);
+  return db.prepare('SELECT * FROM loan_assets WHERE id = ?').get(info.lastInsertRowid);
+}
+
+function deleteLoanAsset(id) {
+  const aid = Number(id);
+  const inUse = db
+    .prepare(
+      `SELECT COUNT(*) AS c FROM loan_checkouts
+       WHERE returned_at IS NULL AND (computer_asset_id = ? OR charger_asset_id = ?)`
+    )
+    .get(aid, aid).c;
+  if (inUse > 0) return { ok: false, error: 'Asset is currently loaned out' };
+  const hasHistory = db
+    .prepare(
+      `SELECT COUNT(*) AS c FROM loan_checkouts WHERE computer_asset_id = ? OR charger_asset_id = ?`
+    )
+    .get(aid, aid).c;
+  if (hasHistory > 0) return { ok: false, error: 'Remove or archive after history exists — return loans first' };
+  const info = db.prepare('DELETE FROM loan_assets WHERE id = ?').run(aid);
+  return { ok: info.changes > 0 };
+}
+
+/** Primary slot: laptop/computer or other equipment (not chargers). */
+function isPrimaryAssetAvailable(assetId) {
+  const row = db.prepare('SELECT id, kind FROM loan_assets WHERE id = ?').get(assetId);
+  if (!row || (row.kind !== 'computer' && row.kind !== 'other')) return false;
+  const n = db
+    .prepare(
+      `SELECT COUNT(*) AS c FROM loan_checkouts
+       WHERE returned_at IS NULL AND (computer_asset_id = ? OR charger_asset_id = ?)`
+    )
+    .get(assetId, assetId).c;
+  return n === 0;
+}
+
+function isChargerAssetAvailable(assetId) {
+  const row = db.prepare('SELECT id, kind FROM loan_assets WHERE id = ?').get(assetId);
+  if (!row || row.kind !== 'charger') return false;
+  const n = db
+    .prepare(
+      `SELECT COUNT(*) AS c FROM loan_checkouts
+       WHERE returned_at IS NULL AND (computer_asset_id = ? OR charger_asset_id = ?)`
+    )
+    .get(assetId, assetId).c;
+  return n === 0;
+}
+
+function createLoanCheckout(data) {
+  const primaryId = Number(data.primaryAssetId ?? data.computerAssetId);
+  const chargerId =
+    data.chargerAssetId != null && data.chargerAssetId !== ''
+      ? Number(data.chargerAssetId)
+      : null;
+  const cRow = db.prepare('SELECT id, kind FROM loan_assets WHERE id = ?').get(primaryId);
+  if (!cRow || (cRow.kind !== 'computer' && cRow.kind !== 'other')) {
+    return { ok: false, error: 'Invalid main item (computer or other)' };
+  }
+  if (!isPrimaryAssetAvailable(primaryId)) {
+    return { ok: false, error: 'That item is not available' };
+  }
+  if (chargerId) {
+    const chRow = db.prepare('SELECT id, kind FROM loan_assets WHERE id = ?').get(chargerId);
+    if (!chRow || chRow.kind !== 'charger') return { ok: false, error: 'Invalid charger' };
+    if (!isChargerAssetAvailable(chargerId)) {
+      return { ok: false, error: 'That charger is not available' };
+    }
+  }
+  const name = String(data.borrowerName || '').trim();
+  if (!name) return { ok: false, error: 'Name required' };
+  const role = String(data.borrowerRole || 'other').toLowerCase();
+  if (!['pupil', 'staff', 'other'].includes(role)) {
+    return { ok: false, error: 'Invalid role' };
+  }
+  const info = db
+    .prepare(
+      `INSERT INTO loan_checkouts (
+        computer_asset_id, charger_asset_id, borrower_name, borrower_role, signature_png
+      ) VALUES (?, ?, ?, ?, NULL)`
+    )
+    .run(primaryId, chargerId, name, role);
+  return { ok: true, id: info.lastInsertRowid };
+}
+
+function returnLoanCheckout(checkoutId) {
+  const row = db
+    .prepare('SELECT id, returned_at FROM loan_checkouts WHERE id = ?')
+    .get(Number(checkoutId));
+  if (!row) return { ok: false, error: 'Not found' };
+  if (row.returned_at) return { ok: false, error: 'Already returned' };
+  db.prepare(`UPDATE loan_checkouts SET returned_at = datetime('now') WHERE id = ?`).run(
+    Number(checkoutId)
+  );
+  return { ok: true };
+}
+
+function getLoanStatus() {
+  const assets = listLoanAssets();
+  const active = db
+    .prepare(
+      `SELECT c.id AS checkout_id, c.computer_asset_id, c.charger_asset_id,
+              c.borrower_name, c.borrower_role, c.created_at,
+              prim.name AS primary_name, prim.kind AS primary_kind,
+              chg.name AS charger_name
+       FROM loan_checkouts c
+       JOIN loan_assets prim ON prim.id = c.computer_asset_id
+       LEFT JOIN loan_assets chg ON chg.id = c.charger_asset_id
+       WHERE c.returned_at IS NULL
+       ORDER BY c.created_at DESC`
+    )
+    .all();
+  const byPrimary = new Map();
+  const byCharger = new Map();
+  for (const row of active) {
+    byPrimary.set(row.computer_asset_id, row);
+    if (row.charger_asset_id) byCharger.set(row.charger_asset_id, row);
+  }
+  const items = assets.map((a) => {
+    let checkout = null;
+    if (a.kind === 'computer' || a.kind === 'other') checkout = byPrimary.get(a.id) || null;
+    else checkout = byCharger.get(a.id) || null;
+    return {
+      id: a.id,
+      kind: a.kind,
+      name: a.name,
+      available: !checkout,
+      checkout: checkout
+        ? {
+            id: checkout.checkout_id,
+            borrowerName: checkout.borrower_name,
+            borrowerRole: checkout.borrower_role,
+            since: checkout.created_at,
+          }
+        : null,
+    };
+  });
+  return { items, activeLoans: active };
+}
+
+function listLoanHistory(limit) {
+  const lim = Math.min(Math.max(Number(limit) || 500, 1), 2000);
+  return db
+    .prepare(
+      `SELECT c.id, c.created_at, c.returned_at, c.borrower_name, c.borrower_role,
+              prim.name AS primary_name, prim.kind AS primary_kind,
+              chg.name AS charger_name
+       FROM loan_checkouts c
+       JOIN loan_assets prim ON prim.id = c.computer_asset_id
+       LEFT JOIN loan_assets chg ON chg.id = c.charger_asset_id
+       ORDER BY c.created_at DESC
+       LIMIT ?`
+    )
+    .all(lim);
+}
+
 module.exports = {
   db,
   createTicket,
@@ -561,4 +898,11 @@ module.exports = {
   createDevice,
   updateDevice,
   deleteDevice,
+  listLoanAssets,
+  createLoanAsset,
+  deleteLoanAsset,
+  createLoanCheckout,
+  returnLoanCheckout,
+  getLoanStatus,
+  listLoanHistory,
 };

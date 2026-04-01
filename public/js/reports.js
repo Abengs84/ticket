@@ -2,6 +2,9 @@
   const $ = (sel, el = document) => el.querySelector(sel);
   const $$ = (sel, el = document) => [...el.querySelectorAll(sel)];
 
+  const I18n = window.ITTicketsI18n;
+  const t = I18n ? I18n.t.bind(I18n) : (k) => k;
+
   const THEME_KEY = 'it-tickets-theme';
 
   function initTheme() {
@@ -47,10 +50,32 @@
     });
   }
 
-  function escapeHtml(t) {
+  function escapeHtml(s) {
     const d = document.createElement('div');
-    d.textContent = t == null ? '' : String(t);
+    d.textContent = s == null ? '' : String(s);
     return d.innerHTML;
+  }
+
+  function categoryLabel(cat) {
+    const m = {
+      abitti: 'catAbitti',
+      hardware: 'catHardware',
+      software: 'catSoftware',
+      network: 'catNetwork',
+      account: 'catAccount',
+      other: 'catOther',
+    };
+    return t(m[cat] || 'catOther');
+  }
+
+  function priorityLabel(p) {
+    const m = { low: 'priLow', medium: 'priMedium', high: 'priHigh', na: 'priNA' };
+    return t(m[p] || p);
+  }
+
+  function statusLabel(s) {
+    const m = { open: 'stOpen', closed: 'stClosed', unresolved: 'stUnresolved' };
+    return t(m[s] || s);
   }
 
   async function loadDashboard() {
@@ -64,33 +89,33 @@
 
     $('#dashboard').innerHTML = `
       <div class="card">
-        <h3>Open</h3>
+        <h3>${escapeHtml(t('dashOpen'))}</h3>
         <div class="stat-big">${open}</div>
-        <p style="margin:0;font-size:0.85rem;color:var(--muted)">Active tickets</p>
+        <p style="margin:0;font-size:0.85rem;color:var(--muted)">${escapeHtml(t('dashOpenHint'))}</p>
       </div>
       <div class="card">
-        <h3>Closed</h3>
+        <h3>${escapeHtml(t('dashClosed'))}</h3>
         <div class="stat-big">${closed}</div>
-        <p style="margin:0;font-size:0.85rem;color:var(--muted)">Resolved &amp; closed</p>
+        <p style="margin:0;font-size:0.85rem;color:var(--muted)">${escapeHtml(t('dashClosedHint'))}</p>
       </div>
       <div class="card">
-        <h3>Unresolved</h3>
+        <h3>${escapeHtml(t('dashUnresolved'))}</h3>
         <div class="stat-big">${unresolved}</div>
-        <p style="margin:0;font-size:0.85rem;color:var(--muted)">Needs follow-up</p>
+        <p style="margin:0;font-size:0.85rem;color:var(--muted)">${escapeHtml(t('dashUnresHint'))}</p>
       </div>
       <div class="card">
-        <h3>Total</h3>
+        <h3>${escapeHtml(t('dashTotal'))}</h3>
         <div class="stat-big">${s.total}</div>
-        <p style="margin:0;font-size:0.85rem;color:var(--muted)">All time</p>
+        <p style="margin:0;font-size:0.85rem;color:var(--muted)">${escapeHtml(t('dashTotalHint'))}</p>
       </div>
       <div class="card">
-        <h3>By category</h3>
+        <h3>${escapeHtml(t('dashByCategory'))}</h3>
         <div class="bar-list">
           ${s.byCategory
             .map(
               (x) => `
             <div class="bar-row">
-              <span>${escapeHtml(x.category)}</span>
+              <span>${escapeHtml(categoryLabel(x.category))}</span>
               <div class="bar-track"><div class="bar-fill" style="width:${(100 * x.c) / maxCat}%"></div></div>
               <span>${x.c}</span>
             </div>`
@@ -99,13 +124,13 @@
         </div>
       </div>
       <div class="card">
-        <h3>By priority</h3>
+        <h3>${escapeHtml(t('dashByPriority'))}</h3>
         <div class="bar-list">
           ${s.byPriority
             .map(
               (x) => `
             <div class="bar-row">
-              <span>${escapeHtml(x.priority === 'na' ? 'N/A' : x.priority)}</span>
+              <span>${escapeHtml(priorityLabel(x.priority))}</span>
               <div class="bar-track"><div class="bar-fill" style="width:${(100 * x.c) / maxPri}%"></div></div>
               <span>${x.c}</span>
             </div>`
@@ -119,21 +144,20 @@
   async function loadReport() {
     const data = await api(`/api/stats/report?period=${encodeURIComponent(reportPeriod)}`);
     const sm = data.summary;
-    $('#reportMeta').textContent = `Range: ${sm.start.slice(0, 10)} → ${sm.end.slice(0, 10)} · ${sm.count} ticket(s)`;
-    const priLabel = (k) => (k === 'na' ? 'N/A' : k);
+    $('#reportMeta').textContent = `${t('repRangePrefix')} ${sm.start.slice(0, 10)} ${t('repRangeArrow')} ${sm.end.slice(0, 10)} · ${sm.count} ${t('repRangeTickets')}`;
     $('#reportSummary').innerHTML = `
       <div class="bar-list" style="max-width:420px">
-        <strong style="font-size:0.85rem">Status</strong>
+        <strong style="font-size:0.85rem">${escapeHtml(t('status'))}</strong>
         ${Object.entries(sm.byStatus)
-          .map(([k, v]) => `<div>${escapeHtml(k)}: <strong>${v}</strong></div>`)
+          .map(([k, v]) => `<div>${escapeHtml(statusLabel(k))}: <strong>${v}</strong></div>`)
           .join('')}
-        <strong style="font-size:0.85rem;display:block;margin-top:0.5rem">Category</strong>
+        <strong style="font-size:0.85rem;display:block;margin-top:0.5rem">${escapeHtml(t('thCategory'))}</strong>
         ${Object.entries(sm.byCategory)
-          .map(([k, v]) => `<div>${escapeHtml(k)}: <strong>${v}</strong></div>`)
+          .map(([k, v]) => `<div>${escapeHtml(categoryLabel(k))}: <strong>${v}</strong></div>`)
           .join('')}
-        <strong style="font-size:0.85rem;display:block;margin-top:0.5rem">Priority</strong>
+        <strong style="font-size:0.85rem;display:block;margin-top:0.5rem">${escapeHtml(t('thPriority'))}</strong>
         ${Object.entries(sm.byPriority)
-          .map(([k, v]) => `<div>${escapeHtml(priLabel(k))}: <strong>${v}</strong></div>`)
+          .map(([k, v]) => `<div>${escapeHtml(priorityLabel(k))}: <strong>${v}</strong></div>`)
           .join('')}
       </div>
     `;
@@ -155,8 +179,12 @@
     window.location.href = `/api/stats/export.pdf?period=${encodeURIComponent(reportPeriod)}`;
   });
 
+  window.addEventListener('it-lang-change', () => {
+    Promise.all([loadDashboard(), loadReport()]).catch((e) => console.error(e));
+  });
+
   Promise.all([loadDashboard(), loadReport()]).catch((e) => {
     console.error(e);
-    $('#dashboard').innerHTML = `<p class="err">Could not load reports. Is the server running?</p>`;
+    $('#dashboard').innerHTML = `<p class="err">${escapeHtml(t('repLoadErr'))}</p>`;
   });
 })();

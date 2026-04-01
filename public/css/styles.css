@@ -138,6 +138,17 @@ header.app-header {
   align-items: center;
 }
 
+.lang-select {
+  font: inherit;
+  font-size: 0.9rem;
+  padding: 0.35rem 0.55rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  max-width: 11rem;
+}
+
 .btn {
   font-family: inherit;
   font-size: 0.9rem;
@@ -150,6 +161,7 @@ header.app-header {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
+  text-decoration: none;
 }
 .btn:hover {
   border-color: var(--accent);

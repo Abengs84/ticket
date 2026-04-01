@@ -2,14 +2,20 @@
   const $ = (sel, el = document) => el.querySelector(sel);
   const $$ = (sel, el = document) => [...el.querySelectorAll(sel)];
 
+  const I18n = window.ITTicketsI18n;
+  const t = I18n ? I18n.t.bind(I18n) : (k) => k;
+
   const THEME_KEY = 'it-tickets-theme';
 
-  const TYPE_LABELS = {
-    printer: 'Printer',
-    computer: 'Computer',
-    peripheral: 'Peripheral',
-    other: 'Other',
-  };
+  function typeLabel(tp) {
+    const m = {
+      printer: 'typePrinter',
+      computer: 'typeComputer',
+      peripheral: 'typePeripheral',
+      other: 'typeOther',
+    };
+    return t(m[tp] || 'typeOther');
+  }
 
   function initTheme() {
     const saved = localStorage.getItem(THEME_KEY);
@@ -52,9 +58,9 @@
     });
   }
 
-  function escapeHtml(t) {
+  function escapeHtml(s) {
     const d = document.createElement('div');
-    d.textContent = t == null ? '' : String(t);
+    d.textContent = s == null ? '' : String(s);
     return d.innerHTML;
   }
 
@@ -77,7 +83,7 @@
     const brands = await api('/api/brands');
     const tb = $('#brandRows');
     if (!brands.length) {
-      tb.innerHTML = `<tr><td colspan="2" class="empty-state">No brands yet. Add one above.</td></tr>`;
+      tb.innerHTML = `<tr><td colspan="2" class="empty-state">${escapeHtml(t('devNoBrands'))}</td></tr>`;
       return;
     }
     tb.innerHTML = brands
@@ -88,10 +94,10 @@
           <input type="text" class="brand-edit-${b.id}" value="${escapeHtml(b.name)}" style="display:none;width:100%;font:inherit" />
         </td>
         <td style="white-space:nowrap">
-          <button type="button" class="btn btn-ghost btn-sm brand-edit-btn" data-id="${b.id}">Edit</button>
-          <button type="button" class="btn btn-danger btn-sm brand-del-btn" data-id="${b.id}">Delete</button>
-          <button type="button" class="btn btn-primary btn-sm brand-save-btn" data-id="${b.id}" style="display:none">Save</button>
-          <button type="button" class="btn btn-ghost btn-sm brand-cancel-btn" data-id="${b.id}" style="display:none">Cancel</button>
+          <button type="button" class="btn btn-ghost btn-sm brand-edit-btn" data-id="${b.id}">${escapeHtml(t('devEdit'))}</button>
+          <button type="button" class="btn btn-danger btn-sm brand-del-btn" data-id="${b.id}">${escapeHtml(t('devDelete'))}</button>
+          <button type="button" class="btn btn-primary btn-sm brand-save-btn" data-id="${b.id}" style="display:none">${escapeHtml(t('devSave'))}</button>
+          <button type="button" class="btn btn-ghost btn-sm brand-cancel-btn" data-id="${b.id}" style="display:none">${escapeHtml(t('devCancel'))}</button>
         </td>
       </tr>`
       )
@@ -128,7 +134,7 @@
 
     $$('.brand-del-btn').forEach((btn) => {
       btn.addEventListener('click', async () => {
-        if (!confirm('Delete this brand? (Only if no devices use it.)')) return;
+        if (!confirm(t('devConfirmBrand'))) return;
         try {
           await api(`/api/brands/${btn.dataset.id}`, { method: 'DELETE' });
           await refreshAll();
@@ -143,18 +149,18 @@
     const devices = await api('/api/devices');
     const tb = $('#deviceRows');
     if (!devices.length) {
-      tb.innerHTML = `<tr><td colspan="4" class="empty-state">No devices yet.</td></tr>`;
+      tb.innerHTML = `<tr><td colspan="4" class="empty-state">${escapeHtml(t('devNoDevices'))}</td></tr>`;
       return;
     }
     tb.innerHTML = devices
       .map(
         (d) => `<tr>
-        <td>${escapeHtml(TYPE_LABELS[d.device_type] || d.device_type)}</td>
+        <td>${escapeHtml(typeLabel(d.device_type))}</td>
         <td>${escapeHtml(d.brand_name)}</td>
         <td>${escapeHtml(d.label || '—')}</td>
         <td style="white-space:nowrap">
-          <button type="button" class="btn btn-ghost btn-sm dev-edit" data-id="${d.id}">Edit</button>
-          <button type="button" class="btn btn-danger btn-sm dev-del" data-id="${d.id}">Delete</button>
+          <button type="button" class="btn btn-ghost btn-sm dev-edit" data-id="${d.id}">${escapeHtml(t('devEdit'))}</button>
+          <button type="button" class="btn btn-danger btn-sm dev-del" data-id="${d.id}">${escapeHtml(t('devDelete'))}</button>
         </td>
       </tr>`
       )
@@ -170,7 +176,7 @@
         $('#devType').value = d.device_type;
         $('#devBrandId').value = String(d.brand_id);
         $('#devLabel').value = d.label || '';
-        $('#deviceSubmitBtn').textContent = 'Save device';
+        $('#deviceSubmitBtn').textContent = t('devSaveDevice');
         $('#deviceCancelEdit').hidden = false;
         $('#deviceForm').scrollIntoView({ behavior: 'smooth' });
       });
@@ -178,8 +184,7 @@
 
     $$('.dev-del').forEach((btn) => {
       btn.addEventListener('click', async () => {
-        if (!confirm('Delete this device? Linked tickets will keep history but device link clears.'))
-          return;
+        if (!confirm(t('devConfirmDevice'))) return;
         try {
           await api(`/api/devices/${btn.dataset.id}`, { method: 'DELETE' });
           await refreshAll();
@@ -192,7 +197,7 @@
 
   async function refreshAll() {
     editingDeviceId = null;
-    $('#deviceSubmitBtn').textContent = 'Add device';
+    $('#deviceSubmitBtn').textContent = t('devAddDevice');
     $('#deviceCancelEdit').hidden = true;
     $('#deviceForm').reset();
     await loadBrandSelect();
@@ -236,8 +241,12 @@
 
   $('#deviceCancelEdit').addEventListener('click', () => refreshAll().catch(console.error));
 
+  window.addEventListener('it-lang-change', () => {
+    refreshAll().catch(console.error);
+  });
+
   refreshAll().catch((e) => {
     console.error(e);
-    $('#brandRows').innerHTML = `<tr><td colspan="2" class="err">Could not reach the server.</td></tr>`;
+    $('#brandRows').innerHTML = `<tr><td colspan="2" class="err">${escapeHtml(t('devServerErr'))}</td></tr>`;
   });
 })();

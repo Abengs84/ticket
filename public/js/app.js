@@ -2,14 +2,47 @@
   const $ = (sel, el = document) => el.querySelector(sel);
   const $$ = (sel, el = document) => [...el.querySelectorAll(sel)];
 
+  const I18n = window.ITTicketsI18n;
+  const t = I18n ? I18n.t.bind(I18n) : (k) => k;
+
   const THEME_KEY = 'it-tickets-theme';
 
-  const TYPE_LABELS = {
-    printer: 'Printer',
-    computer: 'Computer',
-    peripheral: 'Peripheral',
-    other: 'Other',
-  };
+  function typeLabel(tp) {
+    const m = {
+      printer: 'typePrinter',
+      computer: 'typeComputer',
+      peripheral: 'typePeripheral',
+      other: 'typeOther',
+    };
+    return t(m[tp] || 'typeOther');
+  }
+
+  function priorityLabel(p) {
+    const m = { low: 'priLow', medium: 'priMedium', high: 'priHigh', na: 'priNA' };
+    return t(m[p] || p);
+  }
+
+  function reporterLabel(r) {
+    const m = { pupil: 'repPupil', staff: 'repStaff', unknown: 'repUnknown', na: 'repNA' };
+    return t(m[r] || r);
+  }
+
+  function categoryLabel(c) {
+    const m = {
+      abitti: 'catAbitti',
+      hardware: 'catHardware',
+      software: 'catSoftware',
+      network: 'catNetwork',
+      account: 'catAccount',
+      other: 'catOther',
+    };
+    return t(m[c] || 'catOther');
+  }
+
+  function statusLabel(s) {
+    const m = { open: 'stOpen', closed: 'stClosed', unresolved: 'stUnresolved' };
+    return t(m[s] || s);
+  }
 
   function initTheme() {
     const saved = localStorage.getItem(THEME_KEY);
@@ -52,28 +85,20 @@
     });
   }
 
-  function escapeHtml(t) {
+  function escapeHtml(s) {
     const d = document.createElement('div');
-    d.textContent = t == null ? '' : String(t);
+    d.textContent = s == null ? '' : String(s);
     return d.innerHTML;
-  }
-
-  function priorityLabel(p) {
-    return p === 'na' ? 'N/A' : p;
-  }
-
-  function reporterLabel(r) {
-    return r === 'na' ? 'N/A' : r;
   }
 
   function formatDevice(d) {
     if (!d) return '';
-    const tl = TYPE_LABELS[d.type] || d.type;
+    const tl = typeLabel(d.type);
     return [tl, d.brandName, d.label].filter(Boolean).join(' · ');
   }
 
   function deviceOptionLabel(d) {
-    const tl = TYPE_LABELS[d.device_type] || d.device_type;
+    const tl = typeLabel(d.device_type);
     const lab = (d.label || '').trim();
     return lab
       ? `${tl} · ${d.brand_name} · ${lab}`
@@ -85,8 +110,9 @@
     const sel = $('#hardwareDevice');
     const cur =
       selectedDeviceId != null ? String(selectedDeviceId) : sel.value;
+    const opt0 = `<option value="">${escapeHtml(t('deviceOptional'))}</option>`;
     sel.innerHTML =
-      '<option value="">— Optional: select device —</option>' +
+      opt0 +
       devices
         .map(
           (d) =>
@@ -101,8 +127,7 @@
     $('#hardwareRow').hidden = !hw;
     $('#hardwareHint').hidden = !hw;
     if (!hw) {
-      $('#hardwareDevice').innerHTML =
-        '<option value="">— Optional: select device —</option>';
+      $('#hardwareDevice').innerHTML = `<option value="">${escapeHtml(t('deviceOptional'))}</option>`;
     }
   }
 
@@ -159,7 +184,7 @@
     try {
       const tags = await api('/api/tags');
       const dl = $('#tagList');
-      dl.innerHTML = tags.map((t) => `<option value="${escapeHtml(t)}"></option>`).join('');
+      dl.innerHTML = tags.map((tg) => `<option value="${escapeHtml(tg)}"></option>`).join('');
     } catch (_e) {
       /* ignore */
     }
@@ -170,24 +195,24 @@
     const rows = await api(`/api/tickets?${qs}`);
     const tb = $('#ticketRows');
     if (!rows.length) {
-      tb.innerHTML = `<tr><td colspan="8" class="empty-state">No tickets match your filters.</td></tr>`;
+      tb.innerHTML = `<tr><td colspan="8" class="empty-state">${escapeHtml(t('noTicketsMatch'))}</td></tr>`;
       return;
     }
     tb.innerHTML = rows
-      .map((t) => {
-        const badge = `badge badge-${t.status}`;
-        const pr = `badge-priority-${t.priority}`;
-        const rep = [reporterLabel(t.reporterType), t.reporterName].filter(Boolean).join(' · ');
-        const when = t.updatedAt ? t.updatedAt.slice(0, 16).replace('T', ' ') : '';
-        const dev = t.device ? escapeHtml(formatDevice(t.device)) : '—';
-        return `<tr data-id="${t.id}">
-        <td>#${t.id}</td>
-        <td>${escapeHtml(t.title)}</td>
+      .map((row) => {
+        const badge = `badge badge-${row.status}`;
+        const pr = `badge-priority-${row.priority}`;
+        const rep = [reporterLabel(row.reporterType), row.reporterName].filter(Boolean).join(' · ');
+        const when = row.updatedAt ? row.updatedAt.slice(0, 16).replace('T', ' ') : '';
+        const dev = row.device ? escapeHtml(formatDevice(row.device)) : '—';
+        return `<tr data-id="${row.id}">
+        <td>#${row.id}</td>
+        <td>${escapeHtml(row.title)}</td>
         <td>${escapeHtml(rep || '—')}</td>
-        <td>${escapeHtml(t.category)}</td>
+        <td>${escapeHtml(categoryLabel(row.category))}</td>
         <td style="font-size:0.82rem">${dev}</td>
-        <td><span class="badge ${pr}">${escapeHtml(priorityLabel(t.priority))}</span></td>
-        <td><span class="${badge}">${escapeHtml(t.status)}</span></td>
+        <td><span class="badge ${pr}">${escapeHtml(priorityLabel(row.priority))}</span></td>
+        <td><span class="${badge}">${escapeHtml(statusLabel(row.status))}</span></td>
         <td>${escapeHtml(when)}</td>
       </tr>`;
       })
@@ -208,7 +233,7 @@
     $('#btnDelete').hidden = true;
     $('#btnPrint').hidden = true;
     $('#statusWrap').hidden = true;
-    $('#modalTitle').textContent = 'Ticket';
+    $('#modalTitle').textContent = t('modalTicket');
     $('#hardwareRow').hidden = true;
     $('#hardwareHint').hidden = true;
     $('#resolutionWrap').hidden = true;
@@ -228,7 +253,7 @@
     $('#btnDelete').hidden = true;
     $('#btnPrint').hidden = true;
     $('#statusWrap').hidden = true;
-    $('#modalTitle').textContent = id ? `Ticket #${id}` : 'New ticket';
+    $('#modalTitle').textContent = id ? `${t('modalTicketNum')}${id}` : t('modalNewTicket');
     backdrop.hidden = false;
 
     if (!id) {
@@ -241,33 +266,33 @@
       return;
     }
 
-    const t = await api(`/api/tickets/${id}`);
-    $('#ticketId').value = t.id;
-    $('#title').value = t.title;
-    $('#description').value = t.description;
-    $('#reporterType').value = t.reporterType;
-    $('#reporterName').value = t.reporterName || '';
-    $('#category').value = t.category;
-    $('#priority').value = t.priority;
-    $('#status').value = t.status;
-    $('#resolution').value = t.resolution || '';
-    $('#tags').value = (t.tags || []).join(', ');
+    const row = await api(`/api/tickets/${id}`);
+    $('#ticketId').value = row.id;
+    $('#title').value = row.title;
+    $('#description').value = row.description;
+    $('#reporterType').value = row.reporterType;
+    $('#reporterName').value = row.reporterName || '';
+    $('#category').value = row.category;
+    $('#priority').value = row.priority;
+    $('#status').value = row.status;
+    $('#resolution').value = row.resolution || '';
+    $('#tags').value = (row.tags || []).join(', ');
     toggleResolutionField();
     toggleHardwareSection();
-    if (t.category === 'hardware') {
-      await loadTicketDeviceOptions(t.deviceId);
+    if (row.category === 'hardware') {
+      await loadTicketDeviceOptions(row.deviceId);
     }
     $('#statusWrap').hidden = false;
     $('#btnDelete').hidden = false;
     $('#btnPrint').hidden = false;
     $('#detailExtras').hidden = false;
-    $('#datesLine').textContent = `Created: ${t.createdAt} · Updated: ${t.updatedAt}`;
-    const pubUrl = `${window.location.origin}/view/${t.publicId}`;
+    $('#datesLine').textContent = `${t('createdUpdated')} ${row.createdAt} · ${t('updatedPart')} ${row.updatedAt}`;
+    const pubUrl = `${window.location.origin}/view/${row.publicId}`;
     const link = $('#publicLink');
     link.href = pubUrl;
     link.textContent = pubUrl;
-    $('#qrImg').src = `/api/tickets/${t.id}/qrcode.png?${Date.now()}`;
-    await refreshAttachments(t.id);
+    $('#qrImg').src = `/api/tickets/${row.id}/qrcode.png?${Date.now()}`;
+    await refreshAttachments(row.id);
   }
 
   async function refreshAttachments(ticketId) {
@@ -278,12 +303,12 @@
         .map(
           (a) => `<li>
           <a href="${a.viewUrl}" target="_blank" rel="noopener">${escapeHtml(a.originalName)}</a>
-          <span style="color:var(--muted);font-size:0.75rem">${Math.round(a.sizeBytes / 1024)} KB · view</span>
+          <span style="color:var(--muted);font-size:0.75rem">${Math.round(a.sizeBytes / 1024)} ${t('attachKb')}</span>
         </li>`
         )
         .join('');
     } catch (_e) {
-      list.innerHTML = '<li>Could not load attachments.</li>';
+      list.innerHTML = `<li>${escapeHtml(t('attachLoadFail'))}</li>`;
     }
   }
 
@@ -302,7 +327,7 @@
     e.preventDefault();
     const id = $('#ticketId').value;
     if (id && !$('#status').value) {
-      alert('Please choose a status.');
+      alert(t('alertChooseStatus'));
       return;
     }
     const category = $('#category').value;
@@ -336,7 +361,7 @@
 
   $('#btnDelete').addEventListener('click', async () => {
     const id = $('#ticketId').value;
-    if (!id || !confirm('Delete this ticket permanently?')) return;
+    if (!id || !confirm(t('confirmDelete'))) return;
     await api(`/api/tickets/${id}`, { method: 'DELETE' });
     closeModal();
     await Promise.all([loadTickets(), loadTagList()]);
@@ -354,25 +379,23 @@
     });
   }
 
-  function fillPrintArea(t, qrDataUrl) {
-    const pubUrl = `${window.location.origin}/view/${t.publicId}`;
-    const devLine = t.device
-      ? `${formatDevice(t.device)}`
-      : '';
+  function fillPrintArea(row, qrDataUrl) {
+    const pubUrl = `${window.location.origin}/view/${row.publicId}`;
+    const devLine = row.device ? `${formatDevice(row.device)}` : '';
     $('#print-area').innerHTML = `
-      <h1 style="font-size:1.25rem;margin:0 0 1rem">IT Ticket #${t.id}</h1>
-      <p style="margin:0 0 0.5rem"><strong>${escapeHtml(t.title)}</strong></p>
-      <p style="margin:0 0 1rem;white-space:pre-wrap">${escapeHtml(t.description)}</p>
-      <p style="margin:0.25rem 0"><strong>Reporter:</strong> ${escapeHtml(reporterLabel(t.reporterType))} ${escapeHtml(t.reporterName || '')}</p>
-      <p style="margin:0.25rem 0"><strong>Category:</strong> ${escapeHtml(t.category)} · <strong>Priority:</strong> ${escapeHtml(priorityLabel(t.priority))} · <strong>Status:</strong> ${escapeHtml(t.status)}</p>
-      ${devLine ? `<p style="margin:0.25rem 0"><strong>Device:</strong> ${escapeHtml(devLine)}</p>` : ''}
+      <h1 style="font-size:1.25rem;margin:0 0 1rem">${escapeHtml(t('printHeading'))}${row.id}</h1>
+      <p style="margin:0 0 0.5rem"><strong>${escapeHtml(row.title)}</strong></p>
+      <p style="margin:0 0 1rem;white-space:pre-wrap">${escapeHtml(row.description)}</p>
+      <p style="margin:0.25rem 0"><strong>${escapeHtml(t('printReporter'))}</strong> ${escapeHtml(reporterLabel(row.reporterType))} ${escapeHtml(row.reporterName || '')}</p>
+      <p style="margin:0.25rem 0"><strong>${escapeHtml(t('printCategory'))}</strong> ${escapeHtml(categoryLabel(row.category))} · <strong>${escapeHtml(t('printPriority'))}</strong> ${escapeHtml(priorityLabel(row.priority))} · <strong>${escapeHtml(t('printStatus'))}</strong> ${escapeHtml(statusLabel(row.status))}</p>
+      ${devLine ? `<p style="margin:0.25rem 0"><strong>${escapeHtml(t('printDevice'))}</strong> ${escapeHtml(devLine)}</p>` : ''}
       ${
-        t.status === 'closed' && (t.resolution || '').trim()
-          ? `<p style="margin:0.25rem 0"><strong>Resolution:</strong></p><p style="margin:0;white-space:pre-wrap">${escapeHtml(t.resolution)}</p>`
+        row.status === 'closed' && (row.resolution || '').trim()
+          ? `<p style="margin:0.25rem 0"><strong>${escapeHtml(t('printResolution'))}</strong></p><p style="margin:0;white-space:pre-wrap">${escapeHtml(row.resolution)}</p>`
           : ''
       }
-      <p style="margin:0.25rem 0"><strong>Tags:</strong> ${escapeHtml((t.tags || []).join(', ') || '—')}</p>
-      <p style="margin:0.25rem 0"><strong>Created:</strong> ${escapeHtml(t.createdAt)} · <strong>Updated:</strong> ${escapeHtml(t.updatedAt)}</p>
+      <p style="margin:0.25rem 0"><strong>${escapeHtml(t('printTags'))}</strong> ${escapeHtml((row.tags || []).join(', ') || '—')}</p>
+      <p style="margin:0.25rem 0"><strong>${escapeHtml(t('printCreated'))}</strong> ${escapeHtml(row.createdAt)} · <strong>${escapeHtml(t('printUpdated'))}</strong> ${escapeHtml(row.updatedAt)}</p>
       <div style="margin-top:1.5rem;text-align:center">
         <img src="${qrDataUrl}" width="220" height="220" alt="QR" />
         <p style="font-size:0.85rem;word-break:break-all">${escapeHtml(pubUrl)}</p>
@@ -388,9 +411,9 @@
     const id = $('#ticketId').value;
     if (!id) return;
     try {
-      const t = await api(`/api/tickets/${id}`);
-      const qr = await ticketQrDataUrl(t.id);
-      fillPrintArea(t, qr);
+      const row = await api(`/api/tickets/${id}`);
+      const qr = await ticketQrDataUrl(row.id);
+      fillPrintArea(row, qr);
       await waitPaint();
       window.print();
     } catch (e) {
@@ -405,8 +428,16 @@
     }
   );
 
+  window.addEventListener('it-lang-change', () => {
+    loadTickets().catch((e) => console.error(e));
+    const id = $('#ticketId').value;
+    if (id) {
+      openModal(Number(id)).catch((e) => console.error(e));
+    }
+  });
+
   Promise.all([loadTickets(), loadTagList()]).catch((e) => {
     console.error(e);
-    $('#ticketRows').innerHTML = `<tr><td colspan="8" class="err">Could not reach the server. Run <code>npm start</code> from the project folder.</td></tr>`;
+    $('#ticketRows').innerHTML = `<tr><td colspan="8" class="err">${t('serverError')}</td></tr>`;
   });
 })();

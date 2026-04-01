@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <title data-i18n="loanHistDocTitle">Loan history — School IT Tickets</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,700&family=Outfit:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/loan.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <nav class="main-nav" aria-label="Main sections">
+        <a href="/" data-i18n="navTickets">Tickets</a>
+        <a href="/devices" data-i18n="navDevices">Devices</a>
+        <a href="/reports" data-i18n="navReports">Reports</a>
+        <a href="/loan-computers" data-i18n="navLoan">Loan computers</a>
+      </nav>
+
+      <header class="app-header">
+        <div class="brand">
+          <strong data-i18n="loanHistTitle">Loan history</strong>
+          <span data-i18n="loanHistSubtitle">When items were loaned and when they were returned</span>
+        </div>
+        <div class="header-actions">
+          <label class="lang-select-wrap" style="display: flex; align-items: center; gap: 0.35rem; font-size: 0.85rem; color: var(--muted)">
+            <span data-i18n="langLabel">Language</span>
+            <select id="langSelect" class="lang-select" aria-label="Language">
+              <option value="en" data-i18n="langEn">English</option>
+              <option value="sv" data-i18n="langSv">Svenska</option>
+            </select>
+          </label>
+          <button type="button" class="theme-toggle" id="themeToggle" data-i18n-title="themeToggleTitle" title="Toggle theme">🌙</button>
+          <button type="button" class="btn" id="btnRefresh" data-i18n="loanRefresh">Refresh</button>
+        </div>
+      </header>
+
+      <nav class="loan-subnav" aria-label="Loan computers sections">
+        <a href="/loan-computers" data-loan-overview data-i18n="loanSubOverview">Overview</a>
+        <a href="/loan-computers/manage" data-i18n="loanSubManage">Manage inventory</a>
+        <a href="/loan-computers/kiosk" data-i18n="loanSubKiosk">Borrow (kiosk)</a>
+        <a href="/loan-computers/history" aria-current="page" data-loan-history data-i18n="loanSubHistory">History</a>
+      </nav>
+
+      <section class="card">
+        <div class="loan-table-wrap">
+          <table class="loan-table" id="tableHistory">
+            <thead>
+              <tr>
+                <th data-i18n="loanThLoanedAt">Loaned</th>
+                <th data-i18n="loanThReturnedAt">Returned</th>
+                <th data-i18n="loanHistState">State</th>
+                <th data-i18n="loanThBorrower">Borrower</th>
+                <th data-i18n="loanThRole">Role</th>
+                <th data-i18n="loanThMainItem">Main item</th>
+                <th data-i18n="loanThCharger">Charger</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyHistory"></tbody>
+          </table>
+        </div>
+        <p id="histEmpty" style="color: var(--muted); display: none" data-i18n="loanHistEmpty">No loan events yet.</p>
+      </section>
+    </div>
+    <script src="/js/i18n.js"></script>
+    <script src="/js/theme.js"></script>
+    <script src="/js/loan-datetime.js"></script>
+    <script src="/js/loan-history.js"></script>
+  </body>
+</html>

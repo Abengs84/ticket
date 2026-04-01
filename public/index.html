@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <title>School IT Tickets</title>
+    <title data-i18n="brandTitle">School IT Tickets</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -16,82 +16,90 @@
   <body>
     <div class="wrap">
       <nav class="main-nav" aria-label="Main sections">
-        <a href="/" aria-current="page">Tickets</a>
-        <a href="/devices">Devices</a>
-        <a href="/reports">Reports</a>
+        <a href="/" aria-current="page" data-i18n="navTickets">Tickets</a>
+        <a href="/devices" data-i18n="navDevices">Devices</a>
+        <a href="/reports" data-i18n="navReports">Reports</a>
+        <a href="/loan-computers" data-i18n="navLoan">Loan computers</a>
       </nav>
 
       <header class="app-header">
         <div class="brand">
-          <strong>School IT Tickets</strong>
-          <span>Log and track issues — Abitti, hardware, accounts, and more</span>
+          <strong data-i18n="brandTitle">School IT Tickets</strong>
+          <span data-i18n="brandSubtitle">Log and track issues — Abitti, hardware, accounts, and more</span>
         </div>
         <div class="header-actions">
-          <button type="button" class="theme-toggle" id="themeToggle" title="Toggle theme">🌙</button>
-          <button type="button" class="btn btn-primary" id="btnNew">＋ New ticket</button>
+          <label class="lang-select-wrap" style="display: flex; align-items: center; gap: 0.35rem; font-size: 0.85rem; color: var(--muted)">
+            <span data-i18n="langLabel">Language</span>
+            <select id="langSelect" class="lang-select" aria-label="Language">
+              <option value="en" data-i18n="langEn">English</option>
+              <option value="sv" data-i18n="langSv">Svenska</option>
+            </select>
+          </label>
+          <button type="button" class="theme-toggle" id="themeToggle" data-i18n-title="themeToggleTitle" title="Toggle theme">🌙</button>
+          <button type="button" class="btn btn-primary" id="btnNew" data-i18n="newTicket">＋ New ticket</button>
         </div>
       </header>
 
       <section>
-        <h2 style="margin: 0 0 0.75rem">All tickets</h2>
+        <h2 style="margin: 0 0 0.75rem" data-i18n="allTickets">All tickets</h2>
         <div class="filters">
           <label>
-            Search
-            <input type="search" id="fQ" placeholder="Title, description, name…" />
+            <span data-i18n="search">Search</span>
+            <input type="search" id="fQ" data-i18n-placeholder="searchPh" placeholder="Title, description, name…" />
           </label>
           <label>
-            Status
+            <span data-i18n="status">Status</span>
             <select id="fStatus">
-              <option value="">Any</option>
-              <option value="open">Open</option>
-              <option value="closed">Closed</option>
-              <option value="unresolved">Unresolved</option>
+              <option value="" data-i18n="any">Any</option>
+              <option value="open" data-i18n="stOpen">Open</option>
+              <option value="closed" data-i18n="stClosed">Closed</option>
+              <option value="unresolved" data-i18n="stUnresolved">Unresolved</option>
             </select>
           </label>
           <label>
-            Category
+            <span data-i18n="category">Category</span>
             <select id="fCategory">
-              <option value="">Any</option>
-              <option value="abitti">Abitti</option>
-              <option value="hardware">Hardware</option>
-              <option value="software">Software</option>
-              <option value="network">Network</option>
-              <option value="account">Account</option>
-              <option value="other">Other</option>
+              <option value="" data-i18n="any">Any</option>
+              <option value="abitti" data-i18n="catAbitti">Abitti</option>
+              <option value="hardware" data-i18n="catHardware">Hardware</option>
+              <option value="software" data-i18n="catSoftware">Software</option>
+              <option value="network" data-i18n="catNetwork">Network</option>
+              <option value="account" data-i18n="catAccount">Account</option>
+              <option value="other" data-i18n="catOther">Other</option>
             </select>
           </label>
           <label>
-            Priority
+            <span data-i18n="priority">Priority</span>
             <select id="fPriority">
-              <option value="">Any</option>
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-              <option value="na">N/A</option>
+              <option value="" data-i18n="any">Any</option>
+              <option value="low" data-i18n="priLow">Low</option>
+              <option value="medium" data-i18n="priMedium">Medium</option>
+              <option value="high" data-i18n="priHigh">High</option>
+              <option value="na" data-i18n="priNA">N/A</option>
             </select>
           </label>
           <label>
-            Reporter
-            <input type="text" id="fReporter" placeholder="Name or type" />
+            <span data-i18n="reporter">Reporter</span>
+            <input type="text" id="fReporter" data-i18n-placeholder="reporterPh" placeholder="Name or type" />
           </label>
           <label>
-            Tag
-            <input type="text" id="fTag" list="tagList" placeholder="Filter by tag" />
+            <span data-i18n="tag">Tag</span>
+            <input type="text" id="fTag" list="tagList" data-i18n-placeholder="tagPh" placeholder="Filter by tag" />
             <datalist id="tagList"></datalist>
           </label>
           <label>
-            From date
+            <span data-i18n="fromDate">From date</span>
             <input type="date" id="fFrom" />
           </label>
           <label>
-            To date
+            <span data-i18n="toDate">To date</span>
             <input type="date" id="fTo" />
           </label>
           <label>
-            Sort
+            <span data-i18n="sort">Sort</span>
             <select id="fSort">
-              <option value="created">Newest created</option>
-              <option value="updated">Recently updated</option>
+              <option value="created" data-i18n="sortCreated">Newest created</option>
+              <option value="updated" data-i18n="sortUpdated">Recently updated</option>
             </select>
           </label>
         </div>
@@ -99,19 +107,19 @@
           <table class="tickets">
             <thead>
               <tr>
-                <th>ID</th>
-                <th>Title</th>
-                <th>Reporter</th>
-                <th>Category</th>
-                <th>Device</th>
-                <th>Priority</th>
-                <th>Status</th>
-                <th>Updated</th>
+                <th data-i18n="thId">ID</th>
+                <th data-i18n="thTitle">Title</th>
+                <th data-i18n="thReporter">Reporter</th>
+                <th data-i18n="thCategory">Category</th>
+                <th data-i18n="thDevice">Device</th>
+                <th data-i18n="thPriority">Priority</th>
+                <th data-i18n="thStatus">Status</th>
+                <th data-i18n="thUpdated">Updated</th>
               </tr>
             </thead>
             <tbody id="ticketRows">
               <tr>
-                <td colspan="8" class="empty-state">Loading…</td>
+                <td colspan="8" class="empty-state" data-i18n="loading">Loading…</td>
               </tr>
             </tbody>
           </table>
@@ -124,101 +132,104 @@
     <div class="modal-backdrop" id="modalBackdrop" hidden role="dialog" aria-modal="true">
       <div class="modal" id="ticketModal">
         <div class="modal-head">
-          <h2 id="modalTitle">Ticket</h2>
-          <button type="button" class="btn btn-ghost no-print" id="modalClose" aria-label="Close">✕</button>
+          <h2 id="modalTitle" data-i18n="modalTicket">Ticket</h2>
+          <button type="button" class="btn btn-ghost no-print" id="modalClose" data-i18n-aria="closeAria" aria-label="Close">✕</button>
         </div>
         <div class="modal-body">
           <form id="ticketForm" class="form-grid">
             <input type="hidden" id="ticketId" />
             <label>
-              Title / short description *
+              <span data-i18n="fieldTitle">Title / short description *</span>
               <input type="text" id="title" required maxlength="500" />
             </label>
             <label>
-              Detailed description *
+              <span data-i18n="fieldDesc">Detailed description *</span>
               <textarea id="description" required></textarea>
             </label>
             <div class="form-row-2">
               <label>
-                Reporter type *
+                <span data-i18n="reporterType">Reporter type *</span>
                 <select id="reporterType" required>
-                  <option value="pupil">Pupil</option>
-                  <option value="staff">Staff</option>
-                  <option value="unknown">Unknown</option>
-                  <option value="na">N/A</option>
+                  <option value="pupil" data-i18n="repPupil">Pupil</option>
+                  <option value="staff" data-i18n="repStaff">Staff</option>
+                  <option value="unknown" data-i18n="repUnknown">Unknown</option>
+                  <option value="na" data-i18n="repNA">N/A</option>
                 </select>
               </label>
               <label>
-                Reporter name
-                <input type="text" id="reporterName" placeholder="Optional but recommended" />
+                <span data-i18n="reporterName">Reporter name</span>
+                <input type="text" id="reporterName" data-i18n-placeholder="reporterNamePh" placeholder="Optional but recommended" />
               </label>
             </div>
             <div class="form-row-2">
               <label>
-                Category *
+                <span data-i18n="fieldCategory">Category *</span>
                 <select id="category" required>
-                  <option value="abitti">Abitti</option>
-                  <option value="hardware">Hardware</option>
-                  <option value="software">Software</option>
-                  <option value="network">Network</option>
-                  <option value="account">Account</option>
-                  <option value="other">Other</option>
+                  <option value="abitti" data-i18n="catAbitti">Abitti</option>
+                  <option value="hardware" data-i18n="catHardware">Hardware</option>
+                  <option value="software" data-i18n="catSoftware">Software</option>
+                  <option value="network" data-i18n="catNetwork">Network</option>
+                  <option value="account" data-i18n="catAccount">Account</option>
+                  <option value="other" data-i18n="catOther">Other</option>
                 </select>
               </label>
               <label>
-                Priority *
+                <span data-i18n="fieldPriority">Priority *</span>
                 <select id="priority" required>
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
-                  <option value="na">N/A</option>
+                  <option value="low" data-i18n="priLow">Low</option>
+                  <option value="medium" data-i18n="priMedium">Medium</option>
+                  <option value="high" data-i18n="priHigh">High</option>
+                  <option value="na" data-i18n="priNA">N/A</option>
                 </select>
               </label>
             </div>
             <label id="hardwareRow" hidden>
-              Device
+              <span data-i18n="deviceLabel">Device</span>
               <select id="hardwareDevice">
-                <option value="">— Optional: select device —</option>
+                <option value="" data-i18n="deviceOptional">— Optional: select device —</option>
               </select>
             </label>
             <p id="hardwareHint" class="form-hint" hidden style="margin: 0; font-size: 0.8rem; color: var(--muted)">
-              Register devices (and brands) under <a href="/devices">Devices</a>. Each option includes type and brand.
+              <span data-i18n="hardwareHintPrefix">Register devices (and brands) under</span>
+              <a href="/devices" data-i18n="navDevices">Devices</a>
+              <span data-i18n="hardwareHintSuffix">. Each option includes type and brand.</span>
             </p>
             <label id="statusWrap">
-              Status *
+              <span data-i18n="statusLabel">Status *</span>
               <select id="status">
-                <option value="open">Open</option>
-                <option value="closed">Closed</option>
-                <option value="unresolved">Unresolved</option>
+                <option value="open" data-i18n="stOpen">Open</option>
+                <option value="closed" data-i18n="stClosed">Closed</option>
+                <option value="unresolved" data-i18n="stUnresolved">Unresolved</option>
               </select>
             </label>
             <label id="resolutionWrap" hidden>
-              What solved it (optional)
+              <span data-i18n="resolutionLabel">What solved it (optional)</span>
               <textarea
                 id="resolution"
                 rows="3"
+                data-i18n-placeholder="resolutionPh"
                 placeholder="e.g. command you ran, driver or patch, hardware fix, workaround…"
               ></textarea>
             </label>
             <label>
-              Tags (comma-separated)
-              <input type="text" id="tags" placeholder="e.g. laptop, lab-3, urgent-followup" />
+              <span data-i18n="tagsLabel">Tags (comma-separated)</span>
+              <input type="text" id="tags" data-i18n-placeholder="tagsPh" placeholder="e.g. laptop, lab-3, urgent-followup" />
             </label>
             <div id="detailExtras" hidden>
               <p style="margin: 0; font-size: 0.85rem; color: var(--muted)">
                 <span id="datesLine"></span><br />
-                Public link:
+                <span data-i18n="publicLinkLabel">Public link:</span>
                 <a id="publicLink" href="#" target="_blank" rel="noopener"></a>
               </p>
               <div class="qr-block no-print">
-                <img id="qrImg" alt="Ticket QR code" width="200" height="200" />
-                <small>Scan to open this ticket on a phone</small>
+                <img id="qrImg" data-i18n-alt="qrScanHint" alt="Ticket QR code" width="200" height="200" />
+                <small data-i18n="qrScanHint">Scan to open this ticket on a phone</small>
               </div>
               <div class="no-print">
-                <strong style="font-size: 0.85rem">Attachments</strong>
+                <strong style="font-size: 0.85rem" data-i18n="attachments">Attachments</strong>
                 <ul class="attach-list" id="attachList"></ul>
                 <label style="margin-top: 0.5rem">
-                  Upload file
+                  <span data-i18n="uploadFile">Upload file</span>
                   <input type="file" id="attachFile" style="margin-top: 0.25rem" />
                 </label>
               </div>
@@ -226,14 +237,15 @@
           </form>
         </div>
         <div class="modal-foot no-print">
-          <button type="button" class="btn btn-danger" id="btnDelete" hidden>Delete ticket</button>
-          <button type="button" class="btn" id="btnPrint" hidden>Print ticket</button>
-          <button type="button" class="btn" id="modalCancel">Cancel</button>
-          <button type="submit" form="ticketForm" class="btn btn-primary" id="btnSave">Save</button>
+          <button type="button" class="btn btn-danger" id="btnDelete" hidden data-i18n="deleteTicket">Delete ticket</button>
+          <button type="button" class="btn" id="btnPrint" hidden data-i18n="printTicket">Print ticket</button>
+          <button type="button" class="btn" id="modalCancel" data-i18n="cancel">Cancel</button>
+          <button type="submit" form="ticketForm" class="btn btn-primary" id="btnSave" data-i18n="save">Save</button>
         </div>
       </div>
     </div>
 
+    <script src="/js/i18n.js"></script>
     <script src="/js/app.js"></script>
   </body>
 </html>
