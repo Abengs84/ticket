@@ -62,7 +62,9 @@
       thDevice: 'Device',
       thPriority: 'Priority',
       thStatus: 'Status',
+      thCreated: 'Created',
       thUpdated: 'Updated',
+      ticketSortHint: 'Click to sort',
 
       loading: 'Loading…',
       noTicketsMatch: 'No tickets match your filters.',
@@ -377,7 +379,9 @@
       thDevice: 'Enhet',
       thPriority: 'Prioritet',
       thStatus: 'Status',
+      thCreated: 'Skapad',
       thUpdated: 'Uppdaterad',
+      ticketSortHint: 'Klicka för att sortera',
 
       loading: 'Laddar…',
       noTicketsMatch: 'Inga ärenden matchar dina filter.',

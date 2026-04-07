@@ -128,12 +128,12 @@
 }
 
 .loan-manage-panel.card {
-  max-width: min(720px, 100%);
+  max-width: min(27rem, 100%);
 }
 
 /* Abitti2 versions page */
 .loan-abitti2-section {
-  max-width: min(40rem, 100%);
+  max-width: min(27rem, 100%);
   box-sizing: border-box;
 }
 

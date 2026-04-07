@@ -21,7 +21,8 @@ const TICKET_JOIN = `
 const TICKET_SELECT = `
   SELECT t.id, t.public_id, t.title, t.description, t.reporter_type, t.reporter_name,
          t.category, t.priority, t.status, t.device_id, t.resolution, t.created_at, t.updated_at,
-         d.device_type AS dev_type, d.label AS dev_label, b.id AS dev_brand_id, b.name AS dev_brand_name
+         d.device_type AS dev_type, d.label AS dev_label, b.id AS dev_brand_id, b.name AS dev_brand_name,
+         (SELECT COUNT(*) FROM attachments att WHERE att.ticket_id = t.id) AS attachment_count
   FROM tickets t
   ${TICKET_JOIN}
 `;
@@ -385,6 +386,7 @@ function rowToTicket(row, tagRows) {
     resolution: row.resolution != null ? row.resolution : '',
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    attachmentCount: Number(row.attachment_count) || 0,
     tags: (tagRows || []).map((t) => t.name),
   };
 }
@@ -572,8 +574,7 @@ function listTickets(filters) {
   }
 
   const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
-  const orderBy =
-    filters.sort === 'updated' ? 't.updated_at DESC' : 't.created_at DESC';
+  const orderBy = 't.created_at DESC';
   const limit = Math.min(Math.max(parseInt(filters.limit, 10) || 200, 1), 500);
   const rows = db
     .prepare(`${TICKET_SELECT} ${where} ORDER BY ${orderBy} LIMIT ${limit}`)

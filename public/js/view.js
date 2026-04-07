@@ -21,6 +21,18 @@
     return d.innerHTML;
   }
 
+  function ticketLocale() {
+    const l = (document.documentElement.lang || '').toLowerCase();
+    return l.startsWith('sv') ? 'sv-SE' : 'en-GB';
+  }
+
+  function formatTicketDate(iso) {
+    if (!iso) return '';
+    const dt = window.ITLoanDateTime;
+    const s = dt ? dt.formatLoanLocal(iso, ticketLocale()) : '';
+    return s || String(iso);
+  }
+
   function priorityLabel(p) {
     return p === 'na' ? 'N/A' : p;
   }
@@ -90,7 +102,7 @@
           $('#vResolutionWrap').hidden = true;
         }
         $('#vTags').textContent = t.tags && t.tags.length ? t.tags.join(', ') : '—';
-        $('#vTime').textContent = `Created ${t.createdAt} · Last updated ${t.updatedAt}`;
+        $('#vTime').textContent = `Created ${formatTicketDate(t.createdAt)} · Last updated ${formatTicketDate(t.updatedAt)}`;
 
         if (!attachments.length) {
           $('#vAttach').innerHTML = '<span style="color:var(--muted)">None</span>';
@@ -131,7 +143,7 @@
                 : ''
             }
             <p>Tags: ${escapeHtml((t.tags || []).join(', ') || '—')}</p>
-            <p>${escapeHtml(t.createdAt)} — ${escapeHtml(t.updatedAt)}</p>
+            <p>${escapeHtml(formatTicketDate(t.createdAt))} — ${escapeHtml(formatTicketDate(t.updatedAt))}</p>
             <div style="text-align:center;margin-top:1rem">
               <img src="${qrDataUrl}" width="200" height="200" alt="QR" />
               <p style="font-size:0.85rem">${escapeHtml(pubUrl)}</p>

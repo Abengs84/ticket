@@ -295,8 +295,8 @@ header.app-header {
 
 .filters {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 0.65rem;
+  grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
+  gap: 0.4rem;
   margin-bottom: 1rem;
   align-items: end;
 }
@@ -341,10 +341,52 @@ table.tickets th {
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
+table.tickets th.sortable {
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  padding-right: 1.25rem;
+}
+table.tickets th.sortable:hover {
+  color: var(--text);
+}
+table.tickets th.sortable.sorted-asc::after,
+table.tickets th.sortable.sorted-desc::after {
+  content: '';
+  position: absolute;
+  right: 0.4rem;
+  top: 50%;
+  margin-top: -0.2rem;
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+}
+table.tickets th.sortable.sorted-asc::after {
+  border-bottom: 5px solid currentColor;
+}
+table.tickets th.sortable.sorted-desc::after {
+  border-top: 5px solid currentColor;
+}
 table.tickets td {
   padding: 0.65rem 0.75rem;
   border-top: 1px solid var(--border);
   vertical-align: top;
+}
+table.tickets td.ticket-attach-cell {
+  text-align: center;
+  vertical-align: middle;
+  width: 3rem;
+  color: var(--muted);
+}
+.ticket-attach-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.ticket-attach-icon {
+  width: 1.1rem;
+  height: 1.1rem;
 }
 table.tickets tbody tr {
   cursor: pointer;

@@ -5,6 +5,13 @@
   const I18n = window.ITTicketsI18n;
   const t = I18n ? I18n.t.bind(I18n) : (k) => k;
 
+  /** YYYY-MM-DD (or prefix) → D.M.YYYY without timezone shifts */
+  function formatReportRangeDay(ymd) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(ymd || ''));
+    if (!m) return String(ymd || '').slice(0, 10);
+    return `${Number(m[3])}.${Number(m[2])}.${m[1]}`;
+  }
+
   const THEME_KEY = 'it-tickets-theme';
 
   function initTheme() {
@@ -144,7 +151,7 @@
   async function loadReport() {
     const data = await api(`/api/stats/report?period=${encodeURIComponent(reportPeriod)}`);
     const sm = data.summary;
-    $('#reportMeta').textContent = `${t('repRangePrefix')} ${sm.start.slice(0, 10)} ${t('repRangeArrow')} ${sm.end.slice(0, 10)} · ${sm.count} ${t('repRangeTickets')}`;
+    $('#reportMeta').textContent = `${t('repRangePrefix')} ${formatReportRangeDay(sm.start)} ${t('repRangeArrow')} ${formatReportRangeDay(sm.end)} · ${sm.count} ${t('repRangeTickets')}`;
     $('#reportSummary').innerHTML = `
       <div class="bar-list" style="max-width:420px">
         <strong style="font-size:0.85rem">${escapeHtml(t('status'))}</strong>

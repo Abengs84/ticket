@@ -95,31 +95,26 @@
             <span data-i18n="toDate">To date</span>
             <input type="date" id="fTo" />
           </label>
-          <label>
-            <span data-i18n="sort">Sort</span>
-            <select id="fSort">
-              <option value="created" data-i18n="sortCreated">Newest created</option>
-              <option value="updated" data-i18n="sortUpdated">Recently updated</option>
-            </select>
-          </label>
         </div>
         <div class="table-wrap">
           <table class="tickets">
             <thead>
               <tr>
-                <th data-i18n="thId">ID</th>
-                <th data-i18n="thTitle">Title</th>
-                <th data-i18n="thReporter">Reporter</th>
-                <th data-i18n="thCategory">Category</th>
-                <th data-i18n="thDevice">Device</th>
-                <th data-i18n="thPriority">Priority</th>
-                <th data-i18n="thStatus">Status</th>
-                <th data-i18n="thUpdated">Updated</th>
+                <th scope="col" class="sortable" data-sort="id" data-i18n="thId" data-i18n-title="ticketSortHint">ID</th>
+                <th scope="col" class="sortable" data-sort="title" data-i18n="thTitle" data-i18n-title="ticketSortHint">Title</th>
+                <th scope="col" class="sortable" data-sort="reporter" data-i18n="thReporter" data-i18n-title="ticketSortHint">Reporter</th>
+                <th scope="col" class="sortable" data-sort="category" data-i18n="thCategory" data-i18n-title="ticketSortHint">Category</th>
+                <th scope="col" class="sortable" data-sort="device" data-i18n="thDevice" data-i18n-title="ticketSortHint">Device</th>
+                <th scope="col" class="sortable" data-sort="priority" data-i18n="thPriority" data-i18n-title="ticketSortHint">Priority</th>
+                <th scope="col" class="sortable" data-sort="status" data-i18n="thStatus" data-i18n-title="ticketSortHint">Status</th>
+                <th scope="col" class="sortable" data-sort="attachments" data-i18n="attachments" data-i18n-title="ticketSortHint">Attachments</th>
+                <th scope="col" class="sortable" data-sort="created" data-i18n="thCreated" data-i18n-title="ticketSortHint">Created</th>
+                <th scope="col" class="sortable" data-sort="updated" data-i18n="thUpdated" data-i18n-title="ticketSortHint">Updated</th>
               </tr>
             </thead>
             <tbody id="ticketRows">
               <tr>
-                <td colspan="8" class="empty-state" data-i18n="loading">Loading…</td>
+                <td colspan="10" class="empty-state" data-i18n="loading">Loading…</td>
               </tr>
             </tbody>
           </table>
@@ -246,6 +241,7 @@
     </div>
 
     <script src="/js/i18n.js"></script>
+    <script src="/js/loan-datetime.js"></script>
     <script src="/js/app.js"></script>
   </body>
 </html>
