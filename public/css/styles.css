@@ -171,6 +171,7 @@ header.app-header {
   background: var(--accent);
   color: #fff;
   border-color: var(--accent);
+  width: fit-content; 
 }
 .btn-primary:hover {
   background: var(--accent-hover);
@@ -399,6 +400,18 @@ table.tickets tbody tr:hover {
   border-radius: 99px;
 }
 
+.section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+.section-head h2 {
+  margin: 0;
+}
+
 /* Modal */
 .modal-backdrop {
   position: fixed;
@@ -470,9 +483,14 @@ table.tickets tbody tr:hover {
   min-height: 100px;
   resize: vertical;
 }
+/* Optional label row: keep field width in line with the type/brand row above */
+.form-grid .dev-label-field input {
+  max-width: min(100%, 22rem);
+  width: 100%;
+}
 .form-row-2 {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 0.3fr 0.2fr;
   gap: 0.85rem;
 }
 @media (max-width: 520px) {

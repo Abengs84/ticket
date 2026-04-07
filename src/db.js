@@ -883,6 +883,21 @@ function createAbitti2Version(label) {
   return db.prepare('SELECT * FROM abitti2_versions WHERE id = ?').get(info.lastInsertRowid);
 }
 
+function updateAbitti2Version(id, label) {
+  const aid = Number(id);
+  const n = String(label || '').trim();
+  if (!n) return null;
+  const row = db.prepare('SELECT id FROM abitti2_versions WHERE id = ?').get(aid);
+  if (!row) return null;
+  try {
+    db.prepare('UPDATE abitti2_versions SET label = ? WHERE id = ?').run(n, aid);
+  } catch (e) {
+    if (String(e.message).includes('UNIQUE')) return null;
+    throw e;
+  }
+  return db.prepare('SELECT * FROM abitti2_versions WHERE id = ?').get(aid);
+}
+
 function deleteAbitti2Version(id) {
   const inUse = db
     .prepare('SELECT COUNT(*) AS c FROM loan_assets WHERE abitti2_version_id = ?')
@@ -1090,5 +1105,6 @@ module.exports = {
   updateLoanAsset,
   listAbitti2Versions,
   createAbitti2Version,
+  updateAbitti2Version,
   deleteAbitti2Version,
 };

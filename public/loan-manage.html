@@ -98,71 +98,65 @@
 
       <section class="loan-manage-panels">
         <div id="panelManageComputers" class="loan-manage-panel card" role="tabpanel" aria-labelledby="tabManageComputers">
-          <h2 style="margin-top: 0" data-i18n="loanSecComputers">Computers</h2>
-          <form id="formComputer" class="loan-manage-form filters" style="margin-bottom: 1rem">
-            <label class="loan-manage-field">
-              <span data-i18n="loanNameLabel">Name / label</span>
-              <input type="text" id="computerName" data-i18n-placeholder="loanPhComputer" placeholder="e.g. Laptop cart A-12" required />
-            </label>
-            <label class="loan-manage-field">
-              <span
-                data-i18n="loanBrandOptional"
-                data-i18n-title="loanBrandHintTitle"
-                title="Brands are managed under Devices in the main menu — add or edit them there first."
-                class="loan-brand-label"
-                >Brand (optional)</span>
-              <select id="computerBrand"></select>
-            </label>
-            <label class="loan-manage-field">
-              <span data-i18n="loanAbitti2Optional">Abitti2 version (optional)</span>
-              <select id="computerAbitti"></select>
-            </label>
-            <button type="submit" class="btn btn-primary" data-i18n="loanAddComputer">Add computer</button>
-          </form>
+          <div class="section-head">
+            <h2 data-i18n="loanSecComputers">Computers</h2>
+            <button type="button" class="btn btn-primary" id="btnAddComputer" data-i18n="loanAddComputer">Add computer</button>
+          </div>
           <ul class="loan-asset-list" id="listComputers"></ul>
         </div>
         <div id="panelManageChargers" class="loan-manage-panel card" role="tabpanel" aria-labelledby="tabManageChargers" hidden>
-          <h2 style="margin-top: 0" data-i18n="loanSecChargers">Chargers</h2>
-          <form id="formCharger" class="loan-manage-form filters" style="margin-bottom: 1rem">
-            <label class="loan-manage-field">
-              <span data-i18n="loanNameLabel">Name / label</span>
-              <input type="text" id="chargerName" data-i18n-placeholder="loanPhCharger" placeholder="e.g. USB-C charger #3" required />
-            </label>
-            <label class="loan-manage-field">
-              <span
-                data-i18n="loanBrandOptional"
-                data-i18n-title="loanBrandHintTitle"
-                title="Brands are managed under Devices in the main menu — add or edit them there first."
-                class="loan-brand-label"
-                >Brand (optional)</span>
-              <select id="chargerBrand"></select>
-            </label>
-            <button type="submit" class="btn btn-primary" data-i18n="loanAddCharger">Add charger</button>
-          </form>
+          <div class="section-head">
+            <h2 data-i18n="loanSecChargers">Chargers</h2>
+            <button type="button" class="btn btn-primary" id="btnAddCharger" data-i18n="loanAddCharger">Add charger</button>
+          </div>
           <ul class="loan-asset-list" id="listChargers"></ul>
         </div>
         <div id="panelManageOther" class="loan-manage-panel card" role="tabpanel" aria-labelledby="tabManageOther" hidden>
-          <h2 style="margin-top: 0" data-i18n="loanSecOther">Other</h2>
-          <form id="formOther" class="loan-manage-form filters" style="margin-bottom: 1rem">
-            <label class="loan-manage-field">
-              <span data-i18n="loanNameLabel">Name / label</span>
-              <input type="text" id="otherName" data-i18n-placeholder="loanPhOther" placeholder="e.g. Projector, mouse, adapter…" required />
-            </label>
-            <label class="loan-manage-field">
-              <span
-                data-i18n="loanBrandOptional"
-                data-i18n-title="loanBrandHintTitle"
-                title="Brands are managed under Devices in the main menu — add or edit them there first."
-                class="loan-brand-label"
-                >Brand (optional)</span>
-              <select id="otherBrand"></select>
-            </label>
-            <button type="submit" class="btn btn-primary" data-i18n="loanAddOther">Add other</button>
-          </form>
+          <div class="section-head">
+            <h2 data-i18n="loanSecOther">Other</h2>
+            <button type="button" class="btn btn-primary" id="btnAddOther" data-i18n="loanAddOther">Add other</button>
+          </div>
           <ul class="loan-asset-list" id="listOther"></ul>
         </div>
       </section>
     </div>
+
+    <div class="modal-backdrop" id="loanManageModalBackdrop" hidden role="dialog" aria-modal="true" aria-labelledby="loanManageModalTitle">
+      <div class="modal">
+        <div class="modal-head">
+          <h2 id="loanManageModalTitle">Add computer</h2>
+          <button type="button" class="btn btn-ghost" id="loanManageModalCloseX" data-i18n-aria="closeAria" aria-label="Close">✕</button>
+        </div>
+        <div class="modal-body">
+          <form id="loanManageModalForm" class="form-grid">
+            <input type="hidden" id="modalLoanKind" value="computer" />
+            <input type="hidden" id="modalLoanAssetId" value="" />
+            <label>
+              <span data-i18n="loanNameLabel">Name / label</span>
+              <input type="text" id="modalLoanName" maxlength="500" required />
+            </label>
+            <label>
+              <span
+                class="loan-brand-label"
+                data-i18n="loanBrandOptional"
+                data-i18n-title="loanBrandHintTitle"
+                title="Brands are managed under Devices in the main menu — add or edit them there first."
+                >Brand (optional)</span>
+              <select id="modalLoanBrand"></select>
+            </label>
+            <label id="modalLoanAbittiWrap">
+              <span data-i18n="loanAbitti2Optional">Abitti2 version (optional)</span>
+              <select id="modalLoanAbitti"></select>
+            </label>
+          </form>
+        </div>
+        <div class="modal-foot">
+          <button type="button" class="btn" id="loanManageModalCancel" data-i18n="devCancel">Cancel</button>
+          <button type="submit" form="loanManageModalForm" class="btn btn-primary" id="loanManageModalSubmit">Add computer</button>
+        </div>
+      </div>
+    </div>
+
     <script src="/js/i18n.js"></script>
     <script src="/js/theme.js"></script>
     <script src="/js/loan-manage.js"></script>

@@ -7,6 +7,9 @@
 
   const THEME_KEY = 'it-tickets-theme';
 
+  let editingBrandId = null;
+  let editingDeviceId = null;
+
   function typeLabel(tp) {
     const m = {
       printer: 'typePrinter',
@@ -64,19 +67,81 @@
     return d.innerHTML;
   }
 
-  let editingDeviceId = null;
+  function syncModalDefaultTitles() {
+    $('#brandModalTitle').textContent = t('devModalBrandTitleAdd');
+    $('#brandModalSubmit').textContent = t('devAddBrand');
+    $('#deviceModalTitle').textContent = t('devModalDeviceTitleAdd');
+    $('#deviceModalSubmit').textContent = t('devAddDevice');
+  }
 
-  async function loadBrandSelect(selectedId) {
+  function closeBrandModal() {
+    $('#brandModalBackdrop').hidden = true;
+    editingBrandId = null;
+    $('#brandModalForm').reset();
+    $('#brandModalTitle').textContent = t('devModalBrandTitleAdd');
+    $('#brandModalSubmit').textContent = t('devAddBrand');
+  }
+
+  function closeDeviceModal() {
+    $('#deviceModalBackdrop').hidden = true;
+    editingDeviceId = null;
+    $('#modalDevLabel').value = '';
+    $('#modalDevType').selectedIndex = 0;
+    $('#modalDevBrandId').innerHTML = '';
+    $('#deviceModalTitle').textContent = t('devModalDeviceTitleAdd');
+    $('#deviceModalSubmit').textContent = t('devAddDevice');
+  }
+
+  function openBrandModal(opts) {
+    const o = opts || {};
+    const id = o.id != null ? Number(o.id) : null;
+    const name = o.name != null ? String(o.name) : '';
+    editingBrandId = id;
+    if (editingBrandId) {
+      $('#brandModalTitle').textContent = t('devModalBrandTitleEdit');
+      $('#brandModalSubmit').textContent = t('devSave');
+      $('#modalBrandName').value = name;
+    } else {
+      $('#brandModalTitle').textContent = t('devModalBrandTitleAdd');
+      $('#brandModalSubmit').textContent = t('devAddBrand');
+      $('#modalBrandName').value = '';
+    }
+    $('#brandModalBackdrop').hidden = false;
+    requestAnimationFrame(() => $('#modalBrandName').focus());
+  }
+
+  async function loadBrandSelectForModal(selectedId) {
     const brands = await api('/api/brands');
-    const sel = $('#devBrandId');
+    const sel = $('#modalDevBrandId');
     const cur = selectedId != null ? String(selectedId) : sel.value;
     sel.innerHTML = brands
       .map((b) => `<option value="${b.id}">${escapeHtml(b.name)}</option>`)
       .join('');
-    if (brands.length && cur && [...sel.options].some((o) => o.value === cur)) {
+    if (brands.length && cur && [...sel.options].some((opt) => opt.value === cur)) {
       sel.value = cur;
     }
     return brands;
+  }
+
+  async function openDeviceModal(device) {
+    editingDeviceId = device && device.id != null ? Number(device.id) : null;
+    if (editingDeviceId) {
+      await loadBrandSelectForModal(device.brand_id);
+      $('#deviceModalTitle').textContent = t('devModalDeviceTitleEdit');
+      $('#deviceModalSubmit').textContent = t('devSaveDevice');
+      $('#modalDevType').value = device.device_type;
+      $('#modalDevBrandId').value = String(device.brand_id);
+      $('#modalDevLabel').value = device.label || '';
+    } else {
+      $('#modalDevType').selectedIndex = 0;
+      $('#modalDevLabel').value = '';
+      await loadBrandSelectForModal(null);
+      $('#deviceModalTitle').textContent = t('devModalDeviceTitleAdd');
+      $('#deviceModalSubmit').textContent = t('devAddDevice');
+      if ($('#modalDevBrandId').options.length) $('#modalDevBrandId').selectedIndex = 0;
+    }
+    $('#deviceModalBackdrop').hidden = false;
+    requestAnimationFrame(() => $('#modalDevType').focus());
   }
 
   async function loadBrandsTable() {
@@ -89,15 +154,10 @@
     tb.innerHTML = brands
       .map(
         (b) => `<tr data-brand-id="${b.id}">
-        <td>
-          <span class="brand-view-${b.id}">${escapeHtml(b.name)}</span>
-          <input type="text" class="brand-edit-${b.id}" value="${escapeHtml(b.name)}" style="display:none;width:100%;font:inherit" />
-        </td>
+        <td>${escapeHtml(b.name)}</td>
         <td style="white-space:nowrap">
           <button type="button" class="btn btn-ghost btn-sm brand-edit-btn" data-id="${b.id}">${escapeHtml(t('devEdit'))}</button>
           <button type="button" class="btn btn-danger btn-sm brand-del-btn" data-id="${b.id}">${escapeHtml(t('devDelete'))}</button>
-          <button type="button" class="btn btn-primary btn-sm brand-save-btn" data-id="${b.id}" style="display:none">${escapeHtml(t('devSave'))}</button>
-          <button type="button" class="btn btn-ghost btn-sm brand-cancel-btn" data-id="${b.id}" style="display:none">${escapeHtml(t('devCancel'))}</button>
         </td>
       </tr>`
       )
@@ -105,30 +165,9 @@
 
     $$('.brand-edit-btn').forEach((btn) => {
       btn.addEventListener('click', () => {
-        const id = btn.dataset.id;
-        $(`.brand-view-${id}`).style.display = 'none';
-        $(`.brand-edit-${id}`).style.display = 'block';
-        $(`.brand-edit-btn[data-id="${id}"]`).style.display = 'none';
-        $(`.brand-del-btn[data-id="${id}"]`).style.display = 'none';
-        $(`.brand-save-btn[data-id="${id}"]`).style.display = 'inline-flex';
-        $(`.brand-cancel-btn[data-id="${id}"]`).style.display = 'inline-flex';
-      });
-    });
-
-    $$('.brand-cancel-btn').forEach((btn) => {
-      btn.addEventListener('click', () => loadBrandsTable().catch(console.error));
-    });
-
-    $$('.brand-save-btn').forEach((btn) => {
-      btn.addEventListener('click', async () => {
         const id = Number(btn.dataset.id);
-        const name = $(`.brand-edit-${id}`).value;
-        try {
-          await api(`/api/brands/${id}`, { method: 'PUT', body: JSON.stringify({ name }) });
-          await refreshAll();
-        } catch (e) {
-          alert(e.message || String(e));
-        }
+        const name = btn.closest('tr').cells[0].textContent.trim();
+        openBrandModal({ id, name });
       });
     });
 
@@ -172,13 +211,7 @@
         const list = await api('/api/devices');
         const d = list.find((x) => x.id === id);
         if (!d) return;
-        editingDeviceId = id;
-        $('#devType').value = d.device_type;
-        $('#devBrandId').value = String(d.brand_id);
-        $('#devLabel').value = d.label || '';
-        $('#deviceSubmitBtn').textContent = t('devSaveDevice');
-        $('#deviceCancelEdit').hidden = false;
-        $('#deviceForm').scrollIntoView({ behavior: 'smooth' });
+        openDeviceModal(d);
       });
     });
 
@@ -196,33 +229,59 @@
   }
 
   async function refreshAll() {
-    editingDeviceId = null;
-    $('#deviceSubmitBtn').textContent = t('devAddDevice');
-    $('#deviceCancelEdit').hidden = true;
-    $('#deviceForm').reset();
-    await loadBrandSelect();
+    closeBrandModal();
+    closeDeviceModal();
+    syncModalDefaultTitles();
     await Promise.all([loadBrandsTable(), loadDevicesTable()]);
   }
 
-  $('#brandForm').addEventListener('submit', async (e) => {
+  $('#openBrandModalBtn').addEventListener('click', () => openBrandModal());
+
+  $('#openDeviceModalBtn').addEventListener('click', () => {
+    openDeviceModal(null).catch(console.error);
+  });
+
+  $('#brandModalCancel').addEventListener('click', () => closeBrandModal());
+  $('#brandModalCloseX').addEventListener('click', () => closeBrandModal());
+  $('#brandModalBackdrop').addEventListener('click', (e) => {
+    if (e.target === $('#brandModalBackdrop')) closeBrandModal();
+  });
+
+  $('#deviceModalCancel').addEventListener('click', () => closeDeviceModal());
+  $('#deviceModalCloseX').addEventListener('click', () => closeDeviceModal());
+  $('#deviceModalBackdrop').addEventListener('click', (e) => {
+    if (e.target === $('#deviceModalBackdrop')) closeDeviceModal();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    if (!$('#brandModalBackdrop').hidden) closeBrandModal();
+    else if (!$('#deviceModalBackdrop').hidden) closeDeviceModal();
+  });
+
+  $('#brandModalForm').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const name = $('#brandNameInput').value.trim();
+    const name = $('#modalBrandName').value.trim();
     if (!name) return;
     try {
-      await api('/api/brands', { method: 'POST', body: JSON.stringify({ name }) });
-      $('#brandNameInput').value = '';
+      if (editingBrandId) {
+        await api(`/api/brands/${editingBrandId}`, { method: 'PUT', body: JSON.stringify({ name }) });
+      } else {
+        await api('/api/brands', { method: 'POST', body: JSON.stringify({ name }) });
+      }
+      closeBrandModal();
       await refreshAll();
     } catch (err) {
       alert(err.message || String(err));
     }
   });
 
-  $('#deviceForm').addEventListener('submit', async (e) => {
+  $('#deviceModalForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const body = {
-      deviceType: $('#devType').value,
-      brandId: Number($('#devBrandId').value),
-      label: $('#devLabel').value,
+      deviceType: $('#modalDevType').value,
+      brandId: Number($('#modalDevBrandId').value),
+      label: $('#modalDevLabel').value,
     };
     try {
       if (editingDeviceId) {
@@ -233,17 +292,19 @@
       } else {
         await api('/api/devices', { method: 'POST', body: JSON.stringify(body) });
       }
+      closeDeviceModal();
       await refreshAll();
     } catch (err) {
       alert(err.message || String(err));
     }
   });
 
-  $('#deviceCancelEdit').addEventListener('click', () => refreshAll().catch(console.error));
-
   window.addEventListener('it-lang-change', () => {
+    syncModalDefaultTitles();
     refreshAll().catch(console.error);
   });
+
+  syncModalDefaultTitles();
 
   refreshAll().catch((e) => {
     console.error(e);

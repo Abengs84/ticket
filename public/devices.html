@@ -40,14 +40,10 @@
       </header>
 
       <section class="card" style="margin-bottom: 1.5rem">
-        <h2 style="margin-top: 0" data-i18n="devBrandsH2">Brands</h2>
-        <form id="brandForm" class="form-row-2" style="align-items: end; margin-bottom: 1rem">
-          <label>
-            <span data-i18n="devNewBrandLabel">New brand name</span>
-            <input type="text" id="brandNameInput" data-i18n-placeholder="devNewBrandPh" placeholder="e.g. HP, Dell, Canon" />
-          </label>
-          <button type="submit" class="btn btn-primary" data-i18n="devAddBrand">Add brand</button>
-        </form>
+        <div class="section-head">
+          <h2 data-i18n="devBrandsH2">Brands</h2>
+          <button type="button" class="btn btn-primary" id="openBrandModalBtn" data-i18n="devAddBrand">Add brand</button>
+        </div>
         <div class="table-wrap">
           <table class="tickets">
             <thead>
@@ -62,33 +58,13 @@
       </section>
 
       <section class="card">
-        <h2 style="margin-top: 0" data-i18n="devDevicesH2">Devices</h2>
+        <div class="section-head">
+          <h2 data-i18n="devDevicesH2">Devices</h2>
+          <button type="button" class="btn btn-primary" id="openDeviceModalBtn" data-i18n="devAddDevice">Add device</button>
+        </div>
         <p style="margin: 0 0 1rem; font-size: 0.9rem; color: var(--muted)" data-i18n="devDevicesBlurb">
           Type: printer, computer, peripheral, or other. Each device is linked to a brand.
         </p>
-        <form id="deviceForm" class="form-grid" style="margin-bottom: 1rem">
-          <div class="form-row-2">
-            <label>
-              <span data-i18n="devTypeLabel">Type *</span>
-              <select id="devType" required>
-                <option value="printer" data-i18n="typePrinter">Printer</option>
-                <option value="computer" data-i18n="typeComputer">Computer</option>
-                <option value="peripheral" data-i18n="typePeripheral">Peripheral</option>
-                <option value="other" data-i18n="typeOther">Other</option>
-              </select>
-            </label>
-            <label>
-              <span data-i18n="devBrandLabel">Brand *</span>
-              <select id="devBrandId" required></select>
-            </label>
-          </div>
-          <label>
-            <span data-i18n="devLabelNote">Label / note (optional)</span>
-            <input type="text" id="devLabel" data-i18n-placeholder="devLabelPh" placeholder="e.g. Lab 3, Main office MFP" />
-          </label>
-          <button type="submit" class="btn btn-primary" id="deviceSubmitBtn" data-i18n="devAddDevice">Add device</button>
-          <button type="button" class="btn" id="deviceCancelEdit" hidden data-i18n="devCancelEdit">Cancel edit</button>
-        </form>
         <div class="table-wrap">
           <table class="tickets">
             <thead>
@@ -104,6 +80,71 @@
         </div>
       </section>
     </div>
+
+    <div class="modal-backdrop" id="brandModalBackdrop" hidden role="dialog" aria-modal="true" aria-labelledby="brandModalTitle">
+      <div class="modal">
+        <div class="modal-head">
+          <h2 id="brandModalTitle">Add brand</h2>
+          <button type="button" class="btn btn-ghost" id="brandModalCloseX" data-i18n-aria="closeAria" aria-label="Close">✕</button>
+        </div>
+        <div class="modal-body">
+          <form id="brandModalForm" class="form-grid">
+            <label>
+              <span data-i18n="devNewBrandLabel">New brand name</span>
+              <input
+                type="text"
+                id="modalBrandName"
+                data-i18n-placeholder="devNewBrandPh"
+                placeholder="e.g. HP, Dell, Canon"
+                maxlength="200"
+                required
+              />
+            </label>
+          </form>
+        </div>
+        <div class="modal-foot">
+          <button type="button" class="btn" id="brandModalCancel" data-i18n="devCancel">Cancel</button>
+          <button type="submit" form="brandModalForm" class="btn btn-primary" id="brandModalSubmit">Add brand</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-backdrop" id="deviceModalBackdrop" hidden role="dialog" aria-modal="true" aria-labelledby="deviceModalTitle">
+      <div class="modal">
+        <div class="modal-head">
+          <h2 id="deviceModalTitle">Add device</h2>
+          <button type="button" class="btn btn-ghost" id="deviceModalCloseX" data-i18n-aria="closeAria" aria-label="Close">✕</button>
+        </div>
+        <div class="modal-body">
+          <form id="deviceModalForm" class="form-grid">
+            <div class="form-row-2">
+              <label>
+                <span data-i18n="devTypeLabel">Type *</span>
+                <select id="modalDevType" required>
+                  <option value="printer" data-i18n="typePrinter">Printer</option>
+                  <option value="computer" data-i18n="typeComputer">Computer</option>
+                  <option value="peripheral" data-i18n="typePeripheral">Peripheral</option>
+                  <option value="other" data-i18n="typeOther">Other</option>
+                </select>
+              </label>
+              <label>
+                <span data-i18n="devBrandLabel">Brand *</span>
+                <select id="modalDevBrandId" required></select>
+              </label>
+            </div>
+            <label class="dev-label-field">
+              <span data-i18n="devLabelNote">Label / note (optional)</span>
+              <input type="text" id="modalDevLabel" data-i18n-placeholder="devLabelPh" placeholder="e.g. Lab 3, Main office MFP" maxlength="500" />
+            </label>
+          </form>
+        </div>
+        <div class="modal-foot">
+          <button type="button" class="btn" id="deviceModalCancel" data-i18n="devCancel">Cancel</button>
+          <button type="submit" form="deviceModalForm" class="btn btn-primary" id="deviceModalSubmit">Add device</button>
+        </div>
+      </div>
+    </div>
+
     <script src="/js/i18n.js"></script>
     <script src="/js/devices.js"></script>
   </body>

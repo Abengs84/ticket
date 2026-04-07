@@ -49,17 +49,44 @@
       </nav>
 
       <section class="card loan-abitti2-section">
-        <form id="formAbitti2" class="filters loan-abitti2-form" style="margin-bottom: 1rem">
-          <label class="loan-abitti2-field">
-            <span data-i18n="loanColAbitti2">Abitti2 version</span>
-            <input type="text" id="abitti2Label" data-i18n-placeholder="loanAbitti2LabelPh" placeholder="e.g. 2.14" required />
-          </label>
-          <button type="submit" class="btn btn-primary" data-i18n="loanAbitti2Add">Add version</button>
-        </form>
+        <div class="section-head">
+          <h2 data-i18n="loanAbitti2SectionH2">Registered versions</h2>
+          <button type="button" class="btn btn-primary" id="btnAddAbitti2" data-i18n="loanAbitti2Add">Add version</button>
+        </div>
         <ul class="loan-asset-list" id="listAbitti2"></ul>
         <p id="abitti2Empty" style="color: var(--muted); display: none" data-i18n="loanAbitti2Empty">No versions yet.</p>
       </section>
     </div>
+
+    <div class="modal-backdrop" id="abitti2ModalBackdrop" hidden role="dialog" aria-modal="true" aria-labelledby="abitti2ModalTitle">
+      <div class="modal">
+        <div class="modal-head">
+          <h2 id="abitti2ModalTitle">Add Abitti2 version</h2>
+          <button type="button" class="btn btn-ghost" id="abitti2ModalCloseX" data-i18n-aria="closeAria" aria-label="Close">✕</button>
+        </div>
+        <div class="modal-body">
+          <form id="abitti2ModalForm" class="form-grid">
+            <input type="hidden" id="modalAbitti2Id" value="" />
+            <label>
+              <span data-i18n="loanColAbitti2">Abitti2 version</span>
+              <input
+                type="text"
+                id="modalAbitti2Label"
+                data-i18n-placeholder="loanAbitti2LabelPh"
+                placeholder="e.g. 2.14"
+                maxlength="120"
+                required
+              />
+            </label>
+          </form>
+        </div>
+        <div class="modal-foot">
+          <button type="button" class="btn" id="abitti2ModalCancel" data-i18n="devCancel">Cancel</button>
+          <button type="submit" form="abitti2ModalForm" class="btn btn-primary" id="abitti2ModalSubmit">Add version</button>
+        </div>
+      </div>
+    </div>
+
     <script src="/js/i18n.js"></script>
     <script src="/js/theme.js"></script>
     <script src="/js/loan-abitti2.js"></script>

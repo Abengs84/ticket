@@ -303,6 +303,19 @@ app.post('/api/loan/abitti2-versions', (req, res) => {
   }
 });
 
+app.patch('/api/loan/abitti2-versions/:id(\\d+)', (req, res) => {
+  try {
+    const row = db.updateAbitti2Version(Number(req.params.id), req.body && req.body.label);
+    if (!row) return res.status(400).json({ error: 'Invalid label or duplicate' });
+    res.json(row);
+  } catch (e) {
+    if (String(e.message).includes('UNIQUE')) {
+      return res.status(400).json({ error: 'That version already exists' });
+    }
+    res.status(500).json({ error: String(e.message) });
+  }
+});
+
 app.delete('/api/loan/abitti2-versions/:id(\\d+)', (req, res) => {
   try {
     const r = db.deleteAbitti2Version(Number(req.params.id));

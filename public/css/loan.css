@@ -131,39 +131,32 @@
   max-width: min(720px, 100%);
 }
 
-/* Abitti2 versions — compact card */
+/* Abitti2 versions page */
 .loan-abitti2-section {
-  max-width: min(21rem, 100%);
+  max-width: min(40rem, 100%);
   box-sizing: border-box;
 }
 
-.loan-abitti2-form.filters {
-  align-items: end;
-  grid-template-columns: max-content max-content;
-}
-
-.loan-abitti2-form.filters .btn {
-  align-self: end;
-}
-
-#abitti2Label {
-  width: 30mm;
-  max-width: 100%;
-  box-sizing: border-box;
-}
-
-#listAbitti2.loan-asset-list li {
+#listAbitti2.loan-asset-list > li.loan-abitti2-row {
+  display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
   flex-wrap: wrap;
+}
+
+.loan-abitti2-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  align-items: center;
 }
 
 #listAbitti2 .loan-abitti2-version-label {
-  display: inline-flex;
-  flex-wrap: wrap;
-  align-content: center;
-  align-items: center;
   flex: 1;
   min-width: 0;
+  overflow-wrap: break-word;
+  font-weight: 600;
 }
 
 @media (max-width: 768px) {
@@ -423,27 +416,21 @@
   max-width: 100%;
 }
 
-/* Manage inventory — shared column tracks so every row lines up */
+/* Manage inventory — name | edit + remove */
 .loan-manage-panel .loan-asset-list > li.loan-manage-li {
   display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   column-gap: 1rem;
   row-gap: 0.35rem;
 }
 
-.loan-manage-panel .loan-manage-li .loan-manage-li-controls {
-  display: contents;
-}
-
-/* Computers: name | brand | Abitti2 | remove */
-#listComputers.loan-asset-list > li.loan-manage-li {
-  grid-template-columns: minmax(0, 1.25fr) minmax(140px, 1fr) minmax(140px, 1fr) auto;
-}
-
-/* Chargers / other: name | brand | remove */
-#listChargers.loan-asset-list > li.loan-manage-li,
-#listOther.loan-asset-list > li.loan-manage-li {
-  grid-template-columns: minmax(0, 1.25fr) minmax(160px, 220px) auto;
+.loan-manage-li-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  justify-content: flex-end;
+  align-items: center;
 }
 
 .loan-manage-panel .loan-asset-list > li.loan-manage-li .loan-manage-li-title {
@@ -452,31 +439,12 @@
   overflow-wrap: break-word;
 }
 
-.loan-manage-panel .loan-asset-list > li.loan-manage-li select.lang-select {
-  width: 100%;
-  min-width: 0;
-}
-
-.loan-manage-panel .loan-asset-list > li.loan-manage-li .btn {
-  justify-self: end;
-  white-space: nowrap;
-}
-
 @media (max-width: 640px) {
-  #listComputers.loan-asset-list > li.loan-manage-li {
+  .loan-manage-panel .loan-asset-list > li.loan-manage-li {
     grid-template-columns: 1fr;
   }
-  #listChargers.loan-asset-list > li.loan-manage-li,
-  #listOther.loan-asset-list > li.loan-manage-li {
-    grid-template-columns: 1fr;
-  }
-  .loan-manage-panel .loan-manage-li .loan-manage-li-controls {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.45rem;
-  }
-  .loan-manage-panel .loan-asset-list > li.loan-manage-li .btn {
-    justify-self: stretch;
+  .loan-manage-li-actions {
+    justify-content: flex-start;
   }
 }
 

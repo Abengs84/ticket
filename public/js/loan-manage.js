@@ -5,6 +5,10 @@
 
   const MANAGE_TAB_KEY = 'it-loan-manage-kind';
 
+  let editingLoanAssetId = null;
+  let brandsCache = [];
+  let abittiCache = [];
+
   function getManageKind() {
     try {
       const v = localStorage.getItem(MANAGE_TAB_KEY);
@@ -41,9 +45,6 @@
       }
     });
   }
-
-  let brandsCache = [];
-  let abittiCache = [];
 
   async function api(path, opts = {}) {
     const res = await fetch(path, {
@@ -110,10 +111,70 @@
     ]);
     brandsCache = brands || [];
     abittiCache = abitti || [];
-    fillBrandSelect($('#computerBrand'), null);
-    fillBrandSelect($('#chargerBrand'), null);
-    fillBrandSelect($('#otherBrand'), null);
-    fillAbittiSelect($('#computerAbitti'), null);
+  }
+
+  function titleForAdd(kind) {
+    if (kind === 'computer') return t('loanModalComputerAdd');
+    if (kind === 'charger') return t('loanModalChargerAdd');
+    return t('loanModalOtherAdd');
+  }
+
+  function titleForEdit(kind) {
+    if (kind === 'computer') return t('loanModalComputerEdit');
+    if (kind === 'charger') return t('loanModalChargerEdit');
+    return t('loanModalOtherEdit');
+  }
+
+  function submitLabelForAdd(kind) {
+    if (kind === 'computer') return t('loanAddComputer');
+    if (kind === 'charger') return t('loanAddCharger');
+    return t('loanAddOther');
+  }
+
+  function namePlaceholder(kind) {
+    if (kind === 'computer') return t('loanPhComputer');
+    if (kind === 'charger') return t('loanPhCharger');
+    return t('loanPhOther');
+  }
+
+  function closeLoanManageModal() {
+    $('#loanManageModalBackdrop').hidden = true;
+    editingLoanAssetId = null;
+    $('#modalLoanAssetId').value = '';
+    $('#modalLoanName').value = '';
+    $('#modalLoanBrand').innerHTML = '';
+    $('#modalLoanAbitti').innerHTML = '';
+    $('#loanManageModalTitle').textContent = t('loanModalComputerAdd');
+    $('#loanManageModalSubmit').textContent = t('loanAddComputer');
+  }
+
+  async function openLoanManageModal(kind, asset) {
+    await loadMeta();
+    $('#modalLoanKind').value = kind;
+    editingLoanAssetId = asset && asset.id != null ? Number(asset.id) : null;
+    $('#modalLoanAssetId').value = editingLoanAssetId ? String(editingLoanAssetId) : '';
+
+    const abittiWrap = $('#modalLoanAbittiWrap');
+    abittiWrap.hidden = kind !== 'computer';
+    fillBrandSelect($('#modalLoanBrand'), asset ? asset.brandId : null);
+    if (kind === 'computer') {
+      fillAbittiSelect($('#modalLoanAbitti'), asset ? asset.abitti2VersionId : null);
+    }
+
+    $('#modalLoanName').placeholder = namePlaceholder(kind);
+
+    if (asset) {
+      $('#modalLoanName').value = asset.name || '';
+      $('#loanManageModalTitle').textContent = titleForEdit(kind);
+      $('#loanManageModalSubmit').textContent = t('loanModalSave');
+    } else {
+      $('#modalLoanName').value = '';
+      $('#loanManageModalTitle').textContent = titleForAdd(kind);
+      $('#loanManageModalSubmit').textContent = submitLabelForAdd(kind);
+    }
+
+    $('#loanManageModalBackdrop').hidden = false;
+    requestAnimationFrame(() => $('#modalLoanName').focus());
   }
 
   async function load() {
@@ -122,30 +183,12 @@
     const computers = rows.filter((r) => r.kind === 'computer');
     const chargers = rows.filter((r) => r.kind === 'charger');
     const others = rows.filter((r) => r.kind === 'other');
-    renderComputers($('#listComputers'), computers);
-    renderBrandRows($('#listChargers'), chargers);
-    renderBrandRows($('#listOther'), others);
+    renderList($('#listComputers'), computers, 'computer');
+    renderList($('#listChargers'), chargers, 'charger');
+    renderList($('#listOther'), others, 'other');
   }
 
-  async function patchComputerRow(assetId, selB, selA) {
-    selB.disabled = true;
-    selA.disabled = true;
-    try {
-      await api(`/api/loan/assets/${assetId}`, {
-        method: 'PATCH',
-        body: JSON.stringify({
-          brandId: selB.value || null,
-          abitti2VersionId: selA.value || null,
-        }),
-      });
-      await load();
-    } catch (e) {
-      alert(e.message);
-      await load();
-    }
-  }
-
-  function renderComputers(ul, rows) {
+  function renderList(ul, rows, kind) {
     ul.innerHTML = '';
     if (!rows.length) {
       ul.innerHTML = `<li style="color:var(--muted);border:none">${escapeHtml(t('loanListEmpty'))}</li>`;
@@ -157,23 +200,19 @@
       const title = document.createElement('div');
       title.className = 'loan-manage-li-title';
       title.textContent = r.name;
-      const row = document.createElement('div');
-      row.className = 'loan-manage-li-controls';
-      const selB = document.createElement('select');
-      selB.className = 'lang-select';
-      selB.title = t('loanBrandHintTitle');
-      selB.setAttribute('aria-label', t('loanBrandOptional'));
-      fillBrandSelect(selB, r.brandId);
-      const selA = document.createElement('select');
-      selA.className = 'lang-select';
-      selA.setAttribute('aria-label', t('loanAbitti2Optional'));
-      fillAbittiSelect(selA, r.abitti2VersionId);
-      const onChange = () => patchComputerRow(r.id, selB, selA);
-      selB.addEventListener('change', onChange);
-      selA.addEventListener('change', onChange);
+      const actions = document.createElement('div');
+      actions.className = 'loan-manage-li-actions';
+      const edit = document.createElement('button');
+      edit.type = 'button';
+      edit.className = 'btn btn-ghost btn-sm';
+      edit.setAttribute('data-i18n', 'devEdit');
+      edit.textContent = t('devEdit');
+      edit.addEventListener('click', () => {
+        openLoanManageModal(kind, r).catch((e) => alert(e.message));
+      });
       const del = document.createElement('button');
       del.type = 'button';
-      del.className = 'btn';
+      del.className = 'btn btn-sm';
       del.textContent = t('loanRemove');
       del.addEventListener('click', async () => {
         const msg = t('loanConfirmRemove').replace(/\{name\}/g, r.name);
@@ -185,137 +224,71 @@
           alert(e.message);
         }
       });
-      row.appendChild(selB);
-      row.appendChild(selA);
-      row.appendChild(del);
+      actions.appendChild(edit);
+      actions.appendChild(del);
       li.appendChild(title);
-      li.appendChild(row);
+      li.appendChild(actions);
       ul.appendChild(li);
     });
   }
 
-  async function patchBrandOnlyRow(assetId, selB) {
-    selB.disabled = true;
-    try {
-      await api(`/api/loan/assets/${assetId}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ brandId: selB.value || null }),
-      });
-      await load();
-    } catch (e) {
-      alert(e.message);
-      await load();
-    }
-  }
-
-  function renderBrandRows(ul, rows) {
-    ul.innerHTML = '';
-    if (!rows.length) {
-      ul.innerHTML = `<li style="color:var(--muted);border:none">${escapeHtml(t('loanListEmpty'))}</li>`;
-      return;
-    }
-    rows.forEach((r) => {
-      const li = document.createElement('li');
-      li.className = 'loan-manage-li';
-      const title = document.createElement('div');
-      title.className = 'loan-manage-li-title';
-      title.textContent = r.name;
-      const row = document.createElement('div');
-      row.className = 'loan-manage-li-controls';
-      const selB = document.createElement('select');
-      selB.className = 'lang-select';
-      selB.title = t('loanBrandHintTitle');
-      selB.setAttribute('aria-label', t('loanBrandOptional'));
-      fillBrandSelect(selB, r.brandId);
-      selB.addEventListener('change', () => patchBrandOnlyRow(r.id, selB));
-      const del = document.createElement('button');
-      del.type = 'button';
-      del.className = 'btn';
-      del.textContent = t('loanRemove');
-      del.addEventListener('click', async () => {
-        const msg = t('loanConfirmRemove').replace(/\{name\}/g, r.name);
-        if (!confirm(msg)) return;
-        try {
-          await api(`/api/loan/assets/${r.id}`, { method: 'DELETE' });
-          await load();
-        } catch (e) {
-          alert(e.message);
-        }
-      });
-      row.appendChild(selB);
-      row.appendChild(del);
-      li.appendChild(title);
-      li.appendChild(row);
-      ul.appendChild(li);
-    });
-  }
-
-  $('#formComputer').addEventListener('submit', async (e) => {
+  $('#loanManageModalForm').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const name = $('#computerName').value.trim();
+    const kind = $('#modalLoanKind').value;
+    const name = $('#modalLoanName').value.trim();
     if (!name) return;
+    const brandId = $('#modalLoanBrand').value || null;
+    const abitti2VersionId =
+      kind === 'computer' ? $('#modalLoanAbitti').value || null : null;
     try {
-      await api('/api/loan/assets', {
-        method: 'POST',
-        body: JSON.stringify({
-          kind: 'computer',
-          name,
-          brandId: $('#computerBrand').value || null,
-          abitti2VersionId: $('#computerAbitti').value || null,
-        }),
-      });
-      $('#computerName').value = '';
-      $('#computerBrand').value = '';
-      $('#computerAbitti').value = '';
+      if (editingLoanAssetId) {
+        const patch = { name, brandId };
+        if (kind === 'computer') patch.abitti2VersionId = abitti2VersionId;
+        await api(`/api/loan/assets/${editingLoanAssetId}`, {
+          method: 'PATCH',
+          body: JSON.stringify(patch),
+        });
+      } else {
+        await api('/api/loan/assets', {
+          method: 'POST',
+          body: JSON.stringify({
+            kind,
+            name,
+            brandId,
+            abitti2VersionId,
+          }),
+        });
+      }
+      closeLoanManageModal();
       await load();
     } catch (err) {
       alert(err.message);
     }
   });
 
-  $('#formCharger').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const name = $('#chargerName').value.trim();
-    if (!name) return;
-    try {
-      await api('/api/loan/assets', {
-        method: 'POST',
-        body: JSON.stringify({
-          kind: 'charger',
-          name,
-          brandId: $('#chargerBrand').value || null,
-        }),
-      });
-      $('#chargerName').value = '';
-      $('#chargerBrand').value = '';
-      await load();
-    } catch (err) {
-      alert(err.message);
-    }
+  $('#loanManageModalCancel').addEventListener('click', () => closeLoanManageModal());
+  $('#loanManageModalCloseX').addEventListener('click', () => closeLoanManageModal());
+  $('#loanManageModalBackdrop').addEventListener('click', (e) => {
+    if (e.target === $('#loanManageModalBackdrop')) closeLoanManageModal();
   });
 
-  $('#formOther').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const name = $('#otherName').value.trim();
-    if (!name) return;
-    try {
-      await api('/api/loan/assets', {
-        method: 'POST',
-        body: JSON.stringify({
-          kind: 'other',
-          name,
-          brandId: $('#otherBrand').value || null,
-        }),
-      });
-      $('#otherName').value = '';
-      $('#otherBrand').value = '';
-      await load();
-    } catch (err) {
-      alert(err.message);
-    }
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    if (!$('#loanManageModalBackdrop').hidden) closeLoanManageModal();
+  });
+
+  $('#btnAddComputer').addEventListener('click', () => {
+    openLoanManageModal('computer', null).catch((err) => alert(err.message));
+  });
+  $('#btnAddCharger').addEventListener('click', () => {
+    openLoanManageModal('charger', null).catch((err) => alert(err.message));
+  });
+  $('#btnAddOther').addEventListener('click', () => {
+    openLoanManageModal('other', null).catch((err) => alert(err.message));
   });
 
   window.addEventListener('it-lang-change', () => {
+    closeLoanManageModal();
     load().catch((e) => alert(e.message));
   });
 
@@ -331,5 +304,6 @@
   });
 
   applyManageTab();
+  closeLoanManageModal();
   load().catch((e) => alert(e.message));
 })();
