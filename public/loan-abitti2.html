@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <title data-i18n="loanHistDocTitle">Loan history — School IT Tickets</title>
+    <title data-i18n="loanAbitti2DocTitle">Abitti2 versions — School IT Tickets</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -25,8 +25,8 @@
 
       <header class="app-header">
         <div class="brand">
-          <strong data-i18n="loanHistTitle">Loan history</strong>
-          <span data-i18n="loanHistSubtitle">When items were loaned and when they were returned</span>
+          <strong data-i18n="loanAbitti2PageTitle">Abitti2 versions</strong>
+          <span data-i18n="loanAbitti2PageSubtitle">Add labels for Abitti2 builds used on loan computers</span>
         </div>
         <div class="header-actions">
           <label class="lang-select-wrap" style="display: flex; align-items: center; gap: 0.35rem; font-size: 0.85rem; color: var(--muted)">
@@ -37,43 +37,31 @@
             </select>
           </label>
           <button type="button" class="theme-toggle" id="themeToggle" data-i18n-title="themeToggleTitle" title="Toggle theme">🌙</button>
-          <button type="button" class="btn" id="btnRefresh" data-i18n="loanRefresh">Refresh</button>
         </div>
       </header>
 
       <nav class="loan-subnav" aria-label="Loan computers sections">
-        <a href="/loan-computers" data-loan-overview data-i18n="loanSubOverview">Overview</a>
+        <a href="/loan-computers" data-i18n="loanSubOverview">Overview</a>
         <a href="/loan-computers/manage" data-i18n="loanSubManage">Manage inventory</a>
         <a href="/loan-computers/kiosk" data-i18n="loanSubKiosk">Borrow (kiosk)</a>
-        <a href="/loan-computers/history" aria-current="page" data-loan-history data-i18n="loanSubHistory">History</a>
-        <a href="/loan-computers/abitti2" data-i18n="loanSubAbitti2">Abitti2 versions</a>
+        <a href="/loan-computers/history" data-i18n="loanSubHistory">History</a>
+        <a href="/loan-computers/abitti2" aria-current="page" data-i18n="loanSubAbitti2">Abitti2 versions</a>
       </nav>
 
-      <section class="card">
-        <div class="loan-table-wrap">
-          <table class="loan-table" id="tableHistory">
-            <thead>
-              <tr>
-                <th data-i18n="loanThLoanedAt">Loaned</th>
-                <th data-i18n="loanThReturnedAt">Returned</th>
-                <th data-i18n="loanHistState">State</th>
-                <th data-i18n="loanThBorrower">Borrower</th>
-                <th data-i18n="loanThRole">Role</th>
-                <th data-i18n="loanThMainItem">Main item</th>
-                <th data-i18n="loanColBrand">Brand</th>
-                <th data-i18n="loanColAbitti2">Abitti2 version</th>
-                <th data-i18n="loanThCharger">Charger</th>
-              </tr>
-            </thead>
-            <tbody id="tbodyHistory"></tbody>
-          </table>
-        </div>
-        <p id="histEmpty" style="color: var(--muted); display: none" data-i18n="loanHistEmpty">No loan events yet.</p>
+      <section class="card loan-abitti2-section">
+        <form id="formAbitti2" class="filters loan-abitti2-form" style="margin-bottom: 1rem">
+          <label class="loan-abitti2-field">
+            <span data-i18n="loanColAbitti2">Abitti2 version</span>
+            <input type="text" id="abitti2Label" data-i18n-placeholder="loanAbitti2LabelPh" placeholder="e.g. 2.14" required />
+          </label>
+          <button type="submit" class="btn btn-primary" data-i18n="loanAbitti2Add">Add version</button>
+        </form>
+        <ul class="loan-asset-list" id="listAbitti2"></ul>
+        <p id="abitti2Empty" style="color: var(--muted); display: none" data-i18n="loanAbitti2Empty">No versions yet.</p>
       </section>
     </div>
     <script src="/js/i18n.js"></script>
     <script src="/js/theme.js"></script>
-    <script src="/js/loan-datetime.js"></script>
-    <script src="/js/loan-history.js"></script>
+    <script src="/js/loan-abitti2.js"></script>
   </body>
 </html>

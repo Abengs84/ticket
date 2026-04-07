@@ -264,9 +264,50 @@ app.get('/api/loan/assets', (req, res) => {
 
 app.post('/api/loan/assets', (req, res) => {
   try {
-    const row = db.createLoanAsset(req.body.kind, req.body.name);
-    if (!row) return res.status(400).json({ error: 'Invalid kind or name' });
+    const row = db.createLoanAsset(req.body || {});
+    if (!row) return res.status(400).json({ error: 'Invalid kind, name, brand, or Abitti2 version' });
     res.status(201).json(row);
+  } catch (e) {
+    res.status(500).json({ error: String(e.message) });
+  }
+});
+
+app.patch('/api/loan/assets/:id(\\d+)', (req, res) => {
+  try {
+    const row = db.updateLoanAsset(Number(req.params.id), req.body || {});
+    if (!row) return res.status(400).json({ error: 'Invalid update' });
+    res.json(row);
+  } catch (e) {
+    res.status(500).json({ error: String(e.message) });
+  }
+});
+
+app.get('/api/loan/abitti2-versions', (_req, res) => {
+  try {
+    res.json(db.listAbitti2Versions());
+  } catch (e) {
+    res.status(500).json({ error: String(e.message) });
+  }
+});
+
+app.post('/api/loan/abitti2-versions', (req, res) => {
+  try {
+    const row = db.createAbitti2Version(req.body && req.body.label);
+    if (!row) return res.status(400).json({ error: 'Label required' });
+    res.status(201).json(row);
+  } catch (e) {
+    if (String(e.message).includes('UNIQUE')) {
+      return res.status(400).json({ error: 'That version already exists' });
+    }
+    res.status(500).json({ error: String(e.message) });
+  }
+});
+
+app.delete('/api/loan/abitti2-versions/:id(\\d+)', (req, res) => {
+  try {
+    const r = db.deleteAbitti2Version(Number(req.params.id));
+    if (!r.ok) return res.status(400).json({ error: r.error || 'Cannot delete' });
+    res.status(204).end();
   } catch (e) {
     res.status(500).json({ error: String(e.message) });
   }
@@ -596,6 +637,9 @@ app.get('*', (req, res, next) => {
   }
   if (req.path === '/loan-computers/history' || req.path === '/loan-computers/history/') {
     return res.sendFile(path.join(publicDir, 'loan-history.html'));
+  }
+  if (req.path === '/loan-computers/abitti2' || req.path === '/loan-computers/abitti2/') {
+    return res.sendFile(path.join(publicDir, 'loan-abitti2.html'));
   }
   res.sendFile(path.join(publicDir, 'index.html'));
 });

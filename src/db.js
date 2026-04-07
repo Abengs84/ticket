@@ -151,13 +151,27 @@ function migrateResolutionColumnIfNeeded() {
 }
 migrateResolutionColumnIfNeeded();
 
+function initAbitti2Schema() {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS abitti2_versions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      label TEXT NOT NULL UNIQUE COLLATE NOCASE,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+  `);
+}
+
 function initLoanSchema() {
+  initAbitti2Schema();
   db.exec(`
     CREATE TABLE IF NOT EXISTS loan_assets (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       kind TEXT NOT NULL CHECK(kind IN ('computer', 'charger', 'other')),
       name TEXT NOT NULL,
       sort_order INTEGER NOT NULL DEFAULT 0,
+      brand_id INTEGER REFERENCES brands(id) ON DELETE SET NULL,
+      abitti2_version_id INTEGER REFERENCES abitti2_versions(id) ON DELETE SET NULL,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
     CREATE INDEX IF NOT EXISTS idx_loan_assets_kind ON loan_assets(kind);
@@ -250,6 +264,8 @@ function migrateLoanAssetsOtherKindIfNeeded() {
       kind TEXT NOT NULL CHECK(kind IN ('computer', 'charger', 'other')),
       name TEXT NOT NULL,
       sort_order INTEGER NOT NULL DEFAULT 0,
+      brand_id INTEGER REFERENCES brands(id) ON DELETE SET NULL,
+      abitti2_version_id INTEGER REFERENCES abitti2_versions(id) ON DELETE SET NULL,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
     CREATE INDEX idx_loan_assets_kind ON loan_assets(kind);
@@ -268,10 +284,18 @@ function migrateLoanAssetsOtherKindIfNeeded() {
   `);
 
   const insA = db.prepare(
-    'INSERT INTO loan_assets (id, kind, name, sort_order, created_at) VALUES (?, ?, ?, ?, ?)'
+    'INSERT INTO loan_assets (id, kind, name, sort_order, brand_id, abitti2_version_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)'
   );
   for (const a of assets) {
-    insA.run(a.id, a.kind, a.name, a.sort_order, a.created_at);
+    insA.run(
+      a.id,
+      a.kind,
+      a.name,
+      a.sort_order,
+      a.brand_id != null ? a.brand_id : null,
+      a.abitti2_version_id != null ? a.abitti2_version_id : null,
+      a.created_at
+    );
   }
 
   const insC = db.prepare(
@@ -308,6 +332,27 @@ function migrateLoanAssetsOtherKindIfNeeded() {
   }
 }
 migrateLoanAssetsOtherKindIfNeeded();
+
+/** Add brand + Abitti2 version columns to loan_assets (existing DBs). */
+function migrateLoanAssetBrandAbittiIfNeeded() {
+  initAbitti2Schema();
+  const cols = db.prepare('PRAGMA table_info(loan_assets)').all();
+  const names = cols.map((c) => c.name);
+  if (!names.includes('brand_id')) {
+    db.exec(`ALTER TABLE loan_assets ADD COLUMN brand_id INTEGER REFERENCES brands(id) ON DELETE SET NULL`);
+  }
+  if (!names.includes('abitti2_version_id')) {
+    db.exec(
+      `ALTER TABLE loan_assets ADD COLUMN abitti2_version_id INTEGER REFERENCES abitti2_versions(id) ON DELETE SET NULL`
+    );
+  }
+  try {
+    db.exec('CREATE INDEX IF NOT EXISTS idx_loan_assets_brand ON loan_assets(brand_id)');
+  } catch (_e) {
+    /* ignore */
+  }
+}
+migrateLoanAssetBrandAbittiIfNeeded();
 
 const { randomUUID } = require('crypto');
 
@@ -696,31 +741,155 @@ function deleteDevice(id) {
 }
 
 /** ---------- Loan computers ---------- */
-function listLoanAssets(kind) {
-  let sql = 'SELECT id, kind, name, sort_order, created_at FROM loan_assets';
-  const params = [];
-  if (kind === 'computer' || kind === 'charger' || kind === 'other') {
-    sql += ' WHERE kind = ?';
-    params.push(kind);
-  }
-  sql += ' ORDER BY kind, sort_order, name COLLATE NOCASE';
-  return db.prepare(sql).all(...params);
+function mapLoanAssetRow(r) {
+  if (!r) return null;
+  return {
+    id: r.id,
+    kind: r.kind,
+    name: r.name,
+    sort_order: r.sort_order,
+    created_at: r.created_at,
+    brandId: r.brand_id,
+    brandName: r.brand_name,
+    abitti2VersionId: r.abitti2_version_id,
+    abitti2VersionLabel: r.abitti2_version_label,
+  };
 }
 
-function createLoanAsset(kind, name) {
-  const k = String(kind || '').toLowerCase();
+const LOAN_ASSET_SELECT = `SELECT a.id, a.kind, a.name, a.sort_order, a.created_at,
+       a.brand_id, b.name AS brand_name,
+       a.abitti2_version_id, v.label AS abitti2_version_label
+FROM loan_assets a
+LEFT JOIN brands b ON b.id = a.brand_id
+LEFT JOIN abitti2_versions v ON v.id = a.abitti2_version_id`;
+
+function getLoanAssetById(id) {
+  const r = db.prepare(`${LOAN_ASSET_SELECT} WHERE a.id = ?`).get(Number(id));
+  return mapLoanAssetRow(r);
+}
+
+function listLoanAssets(kind) {
+  let sql = LOAN_ASSET_SELECT;
+  const params = [];
+  if (kind === 'computer' || kind === 'charger' || kind === 'other') {
+    sql += ' WHERE a.kind = ?';
+    params.push(kind);
+  }
+  sql += ' ORDER BY a.kind, a.sort_order, a.name COLLATE NOCASE';
+  const rows = db.prepare(sql).all(...params);
+  return rows.map((r) => mapLoanAssetRow(r));
+}
+
+function createLoanAsset(data) {
+  const k = String(data.kind || '').toLowerCase();
   if (k !== 'computer' && k !== 'charger' && k !== 'other') return null;
-  const n = String(name || '').trim();
+  const n = String(data.name || '').trim();
   if (!n) return null;
+  let brandId =
+    data.brandId != null && data.brandId !== '' ? Number(data.brandId) : null;
+  let abittiId =
+    data.abitti2VersionId != null && data.abitti2VersionId !== ''
+      ? Number(data.abitti2VersionId)
+      : null;
+  if (brandId) {
+    const b = db.prepare('SELECT id FROM brands WHERE id = ?').get(brandId);
+    if (!b) return null;
+  } else {
+    brandId = null;
+  }
+  if (k !== 'computer') {
+    abittiId = null;
+  }
+  if (abittiId) {
+    const v = db.prepare('SELECT id FROM abitti2_versions WHERE id = ?').get(abittiId);
+    if (!v) return null;
+  } else {
+    abittiId = null;
+  }
   const maxSort =
     db.prepare('SELECT COALESCE(MAX(sort_order), 0) AS m FROM loan_assets WHERE kind = ?').get(k)
       .m || 0;
   const info = db
     .prepare(
-      'INSERT INTO loan_assets (kind, name, sort_order) VALUES (?, ?, ?)'
+      `INSERT INTO loan_assets (kind, name, sort_order, brand_id, abitti2_version_id)
+       VALUES (?, ?, ?, ?, ?)`
     )
-    .run(k, n, maxSort + 1);
-  return db.prepare('SELECT * FROM loan_assets WHERE id = ?').get(info.lastInsertRowid);
+    .run(k, n, maxSort + 1, brandId, abittiId);
+  return getLoanAssetById(info.lastInsertRowid);
+}
+
+function updateLoanAsset(id, data) {
+  const aid = Number(id);
+  const row = db.prepare('SELECT id, kind FROM loan_assets WHERE id = ?').get(aid);
+  if (!row) return null;
+  const name = data.name != null ? String(data.name).trim() : null;
+  let brandId =
+    data.brandId !== undefined
+      ? data.brandId != null && data.brandId !== ''
+        ? Number(data.brandId)
+        : null
+      : undefined;
+  let abittiId =
+    data.abitti2VersionId !== undefined
+      ? data.abitti2VersionId != null && data.abitti2VersionId !== ''
+        ? Number(data.abitti2VersionId)
+        : null
+      : undefined;
+  if (brandId !== undefined && brandId) {
+    const b = db.prepare('SELECT id FROM brands WHERE id = ?').get(brandId);
+    if (!b) return null;
+  }
+  if (row.kind !== 'computer' && abittiId !== undefined) {
+    abittiId = null;
+  }
+  if (abittiId !== undefined && abittiId) {
+    const v = db.prepare('SELECT id FROM abitti2_versions WHERE id = ?').get(abittiId);
+    if (!v) return null;
+  }
+  const sets = [];
+  const vals = [];
+  if (name !== null && name !== '') {
+    sets.push('name = ?');
+    vals.push(name);
+  }
+  if (brandId !== undefined) {
+    sets.push('brand_id = ?');
+    vals.push(brandId);
+  }
+  if (abittiId !== undefined) {
+    sets.push('abitti2_version_id = ?');
+    vals.push(abittiId);
+  }
+  if (!sets.length) return getLoanAssetById(aid);
+  vals.push(aid);
+  db.prepare(`UPDATE loan_assets SET ${sets.join(', ')} WHERE id = ?`).run(...vals);
+  return getLoanAssetById(aid);
+}
+
+function listAbitti2Versions() {
+  return db
+    .prepare('SELECT id, label, sort_order, created_at FROM abitti2_versions ORDER BY sort_order DESC, label COLLATE NOCASE')
+    .all();
+}
+
+function createAbitti2Version(label) {
+  const n = String(label || '').trim();
+  if (!n) return null;
+  const maxSort =
+    db.prepare('SELECT COALESCE(MAX(sort_order), 0) AS m FROM abitti2_versions').get().m || 0;
+  const info = db
+    .prepare('INSERT INTO abitti2_versions (label, sort_order) VALUES (?, ?)')
+    .run(n, maxSort + 1);
+  return db.prepare('SELECT * FROM abitti2_versions WHERE id = ?').get(info.lastInsertRowid);
+}
+
+function deleteAbitti2Version(id) {
+  const inUse = db
+    .prepare('SELECT COUNT(*) AS c FROM loan_assets WHERE abitti2_version_id = ?')
+    .get(Number(id)).c;
+  if (inUse > 0) return { ok: false, error: 'Version is assigned to loan equipment' };
+  const info = db.prepare('DELETE FROM abitti2_versions WHERE id = ?').run(Number(id));
+  return { ok: info.changes > 0 };
 }
 
 function deleteLoanAsset(id) {
@@ -822,9 +991,13 @@ function getLoanStatus() {
       `SELECT c.id AS checkout_id, c.computer_asset_id, c.charger_asset_id,
               c.borrower_name, c.borrower_role, c.created_at,
               prim.name AS primary_name, prim.kind AS primary_kind,
+              pb.name AS primary_brand_name,
+              pv.label AS primary_abitti2_version_label,
               chg.name AS charger_name
        FROM loan_checkouts c
        JOIN loan_assets prim ON prim.id = c.computer_asset_id
+       LEFT JOIN brands pb ON pb.id = prim.brand_id
+       LEFT JOIN abitti2_versions pv ON pv.id = prim.abitti2_version_id
        LEFT JOIN loan_assets chg ON chg.id = c.charger_asset_id
        WHERE c.returned_at IS NULL
        ORDER BY c.created_at DESC`
@@ -844,6 +1017,10 @@ function getLoanStatus() {
       id: a.id,
       kind: a.kind,
       name: a.name,
+      brandId: a.brandId,
+      brandName: a.brandName,
+      abitti2VersionId: a.abitti2VersionId,
+      abitti2VersionLabel: a.abitti2VersionLabel,
       available: !checkout,
       checkout: checkout
         ? {
@@ -864,9 +1041,13 @@ function listLoanHistory(limit) {
     .prepare(
       `SELECT c.id, c.created_at, c.returned_at, c.borrower_name, c.borrower_role,
               prim.name AS primary_name, prim.kind AS primary_kind,
+              pb.name AS primary_brand_name,
+              pv.label AS primary_abitti2_version_label,
               chg.name AS charger_name
        FROM loan_checkouts c
        JOIN loan_assets prim ON prim.id = c.computer_asset_id
+       LEFT JOIN brands pb ON pb.id = prim.brand_id
+       LEFT JOIN abitti2_versions pv ON pv.id = prim.abitti2_version_id
        LEFT JOIN loan_assets chg ON chg.id = c.charger_asset_id
        ORDER BY c.created_at DESC
        LIMIT ?`
@@ -905,4 +1086,9 @@ module.exports = {
   returnLoanCheckout,
   getLoanStatus,
   listLoanHistory,
+  getLoanAssetById,
+  updateLoanAsset,
+  listAbitti2Versions,
+  createAbitti2Version,
+  deleteAbitti2Version,
 };

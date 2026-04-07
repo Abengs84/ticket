@@ -61,7 +61,8 @@
         o.value = String(c.id);
         o.dataset.assetKind = c.kind;
         const tag = c.kind === 'other' ? t('kioskOtherTag') : '';
-        o.textContent = `${c.name}${tag}`;
+        const brandBit = c.brandName ? `${c.brandName} · ` : '';
+        o.textContent = `${brandBit}${c.name}${tag}`;
         selC.appendChild(o);
       });
     }

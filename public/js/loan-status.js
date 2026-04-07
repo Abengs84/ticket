@@ -118,6 +118,8 @@
         <td>${escapeHtml(row.borrower_name || '')}</td>
         <td>${escapeHtml(roleLabel(row.borrower_role))}</td>
         <td>${escapeHtml(primaryName)}${kindSuffix}</td>
+        <td>${escapeHtml(row.primary_brand_name || '—')}</td>
+        <td>${escapeHtml(row.primary_abitti2_version_label || '—')}</td>
         <td>${escapeHtml(row.charger_name || '—')}</td>
         <td></td>
       `;
@@ -172,20 +174,28 @@
           : '—';
       let nameHtml = escapeHtml(it.name);
       let nameText = it.name;
+      let iconNameLines = null;
       if (!avail && primaryIdToChargerName.has(Number(it.id))) {
         const chg = primaryIdToChargerName.get(Number(it.id));
         if (chg) {
           const bit = t('loanNameChargerBit').replace(/\{name\}/g, escapeHtml(chg));
           nameHtml += ` <span class="loan-inline-charger">${bit}</span>`;
           nameText += ` ${t('loanNameChargerBit').replace(/\{name\}/g, chg)}`;
+          iconNameLines = [it.name, '+', t('loanIconChargerWord'), chg];
         }
       }
+      const brandName = it.brandName ? String(it.brandName) : '';
+      const abittiLabel = it.abitti2VersionLabel ? String(it.abitti2VersionLabel) : '';
       rows.push({
         kind: it.kind,
         id: it.id,
         avail,
         nameHtml,
         nameText,
+        iconNameLines,
+        brandName,
+        brandDisplay: brandName || '—',
+        abittiDisplay: abittiLabel || '—',
         whoLabel: avail ? '' : who,
       });
     });
@@ -200,6 +210,8 @@
       tr.innerHTML = `
         <td>${escapeHtml(kindLabel(row.kind))}</td>
         <td>${row.nameHtml}</td>
+        <td>${escapeHtml(row.brandDisplay)}</td>
+        <td>${escapeHtml(row.abittiDisplay)}</td>
         <td><span class="loan-badge ${row.avail ? 'ok' : 'out'}">${row.avail ? escapeHtml(t('loanAvail')) : escapeHtml(t('loanOut'))}</span></td>
         <td>${row.avail ? '—' : escapeHtml(row.whoLabel)}</td>
       `;
@@ -218,9 +230,24 @@
       frame.innerHTML = equipmentKindIcon(row.kind);
       const nameEl = document.createElement('div');
       nameEl.className = 'loan-equip-icon-name';
-      nameEl.textContent = row.nameText;
+      if (row.iconNameLines && row.iconNameLines.length) {
+        row.iconNameLines.forEach((line) => {
+          const lineEl = document.createElement('div');
+          lineEl.className = 'loan-equip-icon-name-line';
+          lineEl.textContent = line;
+          nameEl.appendChild(lineEl);
+        });
+      } else {
+        nameEl.textContent = row.nameText;
+      }
       card.appendChild(frame);
       card.appendChild(nameEl);
+      if (row.brandName) {
+        const brandEl = document.createElement('div');
+        brandEl.className = 'loan-equip-icon-brand';
+        brandEl.textContent = row.brandName;
+        card.appendChild(brandEl);
+      }
       if (!row.avail && row.whoLabel) {
         const whoEl = document.createElement('div');
         whoEl.className = 'loan-equip-icon-who';

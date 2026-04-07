@@ -45,37 +45,117 @@
         <a href="/loan-computers/manage" aria-current="page" data-i18n="loanSubManage">Manage inventory</a>
         <a href="/loan-computers/kiosk" data-i18n="loanSubKiosk">Borrow (kiosk)</a>
         <a href="/loan-computers/history" data-i18n="loanSubHistory">History</a>
+        <a href="/loan-computers/abitti2" data-i18n="loanSubAbitti2">Abitti2 versions</a>
       </nav>
 
-      <section class="loan-three-col">
-        <div class="card">
+      <div class="loan-manage-toolbar">
+        <div
+          class="loan-manage-kind-toggle"
+          role="tablist"
+          data-i18n-aria="loanManageTabListAria"
+          aria-label="Inventory category"
+        >
+          <button
+            type="button"
+            id="tabManageComputers"
+            class="loan-manage-tab"
+            role="tab"
+            aria-selected="true"
+            aria-controls="panelManageComputers"
+            data-kind="computer"
+            data-i18n="loanSecComputers"
+          >
+            Computers
+          </button>
+          <button
+            type="button"
+            id="tabManageChargers"
+            class="loan-manage-tab"
+            role="tab"
+            aria-selected="false"
+            tabindex="-1"
+            aria-controls="panelManageChargers"
+            data-kind="charger"
+            data-i18n="loanSecChargers"
+          >
+            Chargers
+          </button>
+          <button
+            type="button"
+            id="tabManageOther"
+            class="loan-manage-tab"
+            role="tab"
+            aria-selected="false"
+            tabindex="-1"
+            aria-controls="panelManageOther"
+            data-kind="other"
+            data-i18n="loanSecOther"
+          >
+            Other
+          </button>
+        </div>
+      </div>
+
+      <section class="loan-manage-panels">
+        <div id="panelManageComputers" class="loan-manage-panel card" role="tabpanel" aria-labelledby="tabManageComputers">
           <h2 style="margin-top: 0" data-i18n="loanSecComputers">Computers</h2>
-          <form id="formComputer" class="filters" style="margin-bottom: 1rem">
-            <label style="flex: 1; min-width: 140px">
+          <form id="formComputer" class="loan-manage-form filters" style="margin-bottom: 1rem">
+            <label class="loan-manage-field">
               <span data-i18n="loanNameLabel">Name / label</span>
               <input type="text" id="computerName" data-i18n-placeholder="loanPhComputer" placeholder="e.g. Laptop cart A-12" required />
+            </label>
+            <label class="loan-manage-field">
+              <span
+                data-i18n="loanBrandOptional"
+                data-i18n-title="loanBrandHintTitle"
+                title="Brands are managed under Devices in the main menu — add or edit them there first."
+                class="loan-brand-label"
+                >Brand (optional)</span>
+              <select id="computerBrand"></select>
+            </label>
+            <label class="loan-manage-field">
+              <span data-i18n="loanAbitti2Optional">Abitti2 version (optional)</span>
+              <select id="computerAbitti"></select>
             </label>
             <button type="submit" class="btn btn-primary" data-i18n="loanAddComputer">Add computer</button>
           </form>
           <ul class="loan-asset-list" id="listComputers"></ul>
         </div>
-        <div class="card">
+        <div id="panelManageChargers" class="loan-manage-panel card" role="tabpanel" aria-labelledby="tabManageChargers" hidden>
           <h2 style="margin-top: 0" data-i18n="loanSecChargers">Chargers</h2>
-          <form id="formCharger" class="filters" style="margin-bottom: 1rem">
-            <label style="flex: 1; min-width: 140px">
+          <form id="formCharger" class="loan-manage-form filters" style="margin-bottom: 1rem">
+            <label class="loan-manage-field">
               <span data-i18n="loanNameLabel">Name / label</span>
               <input type="text" id="chargerName" data-i18n-placeholder="loanPhCharger" placeholder="e.g. USB-C charger #3" required />
+            </label>
+            <label class="loan-manage-field">
+              <span
+                data-i18n="loanBrandOptional"
+                data-i18n-title="loanBrandHintTitle"
+                title="Brands are managed under Devices in the main menu — add or edit them there first."
+                class="loan-brand-label"
+                >Brand (optional)</span>
+              <select id="chargerBrand"></select>
             </label>
             <button type="submit" class="btn btn-primary" data-i18n="loanAddCharger">Add charger</button>
           </form>
           <ul class="loan-asset-list" id="listChargers"></ul>
         </div>
-        <div class="card">
+        <div id="panelManageOther" class="loan-manage-panel card" role="tabpanel" aria-labelledby="tabManageOther" hidden>
           <h2 style="margin-top: 0" data-i18n="loanSecOther">Other</h2>
-          <form id="formOther" class="filters" style="margin-bottom: 1rem">
-            <label style="flex: 1; min-width: 140px">
+          <form id="formOther" class="loan-manage-form filters" style="margin-bottom: 1rem">
+            <label class="loan-manage-field">
               <span data-i18n="loanNameLabel">Name / label</span>
               <input type="text" id="otherName" data-i18n-placeholder="loanPhOther" placeholder="e.g. Projector, mouse, adapter…" required />
+            </label>
+            <label class="loan-manage-field">
+              <span
+                data-i18n="loanBrandOptional"
+                data-i18n-title="loanBrandHintTitle"
+                title="Brands are managed under Devices in the main menu — add or edit them there first."
+                class="loan-brand-label"
+                >Brand (optional)</span>
+              <select id="otherBrand"></select>
             </label>
             <button type="submit" class="btn btn-primary" data-i18n="loanAddOther">Add other</button>
           </form>

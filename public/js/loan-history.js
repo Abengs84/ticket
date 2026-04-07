@@ -64,6 +64,8 @@
         <td>${escapeHtml(row.borrower_name || '')}</td>
         <td>${escapeHtml(roleLabel(row.borrower_role))}</td>
         <td>${escapeHtml(primaryName)}${kindSuffix(row.primary_kind)}</td>
+        <td>${escapeHtml(row.primary_brand_name || '—')}</td>
+        <td>${escapeHtml(row.primary_abitti2_version_label || '—')}</td>
         <td>${escapeHtml(row.charger_name || '—')}</td>
       `;
       tb.appendChild(tr);
