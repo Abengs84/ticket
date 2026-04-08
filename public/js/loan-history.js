@@ -17,9 +17,13 @@
   }
 
   function kindSuffix(primaryKind) {
-    return primaryKind === 'other'
-      ? ` <span style="color:var(--muted)">${escapeHtml(t('loanKindOtherParen'))}</span>`
-      : '';
+    if (primaryKind === 'other') {
+      return ` <span style="color:var(--muted)">${escapeHtml(t('loanKindOtherParen'))}</span>`;
+    }
+    if (primaryKind === 'charger') {
+      return ` <span style="color:var(--muted)">${escapeHtml(t('loanKindChargerParen'))}</span>`;
+    }
+    return '';
   }
 
   function escapeHtml(s) {

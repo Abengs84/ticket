@@ -39,7 +39,9 @@
     if (!res.ok) throw new Error(t('kioskMsgLoadFail'));
     const data = await res.json();
     const primaryItems = data.items.filter(
-      (i) => (i.kind === 'computer' || i.kind === 'other') && i.available
+      (i) =>
+        i.available &&
+        (i.kind === 'computer' || i.kind === 'other' || i.kind === 'charger')
     );
     const chargers = data.items.filter((i) => i.kind === 'charger' && i.available);
 
@@ -60,7 +62,8 @@
         const o = document.createElement('option');
         o.value = String(c.id);
         o.dataset.assetKind = c.kind;
-        const tag = c.kind === 'other' ? t('kioskOtherTag') : '';
+        const tag =
+          c.kind === 'other' ? t('kioskOtherTag') : c.kind === 'charger' ? t('kioskChargerTag') : '';
         const brandBit = c.brandName ? `${c.brandName} · ` : '';
         o.textContent = `${brandBit}${c.name}${tag}`;
         selC.appendChild(o);

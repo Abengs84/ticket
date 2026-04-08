@@ -211,6 +211,38 @@
   letter-spacing: 0.04em;
 }
 
+.loan-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  padding-right: 1.2rem;
+}
+
+.loan-table th.sortable:hover {
+  color: var(--text);
+}
+
+.loan-table th.sortable.sorted-asc::after,
+.loan-table th.sortable.sorted-desc::after {
+  content: '';
+  position: absolute;
+  right: 0.35rem;
+  top: 50%;
+  margin-top: -0.2rem;
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+}
+
+.loan-table th.sortable.sorted-asc::after {
+  border-bottom: 5px solid currentColor;
+}
+
+.loan-table th.sortable.sorted-desc::after {
+  border-top: 5px solid currentColor;
+}
+
 .loan-badge {
   display: inline-block;
   padding: 0.15rem 0.5rem;

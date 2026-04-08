@@ -1,6 +1,6 @@
 {
   "name": "school-it-tickets",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "Lightweight IT ticket system for schools",
   "main": "src/server.js",
   "scripts": {

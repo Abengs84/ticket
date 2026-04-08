@@ -179,13 +179,14 @@ function initLoanSchema() {
 
     CREATE TABLE IF NOT EXISTS loan_checkouts (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      computer_asset_id INTEGER NOT NULL REFERENCES loan_assets(id),
+      computer_asset_id INTEGER REFERENCES loan_assets(id),
       charger_asset_id INTEGER REFERENCES loan_assets(id),
       borrower_name TEXT NOT NULL,
       borrower_role TEXT NOT NULL CHECK(borrower_role IN ('pupil', 'staff', 'other')),
       signature_png BLOB,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
-      returned_at TEXT
+      returned_at TEXT,
+      CHECK (computer_asset_id IS NOT NULL OR charger_asset_id IS NOT NULL)
     );
     CREATE INDEX IF NOT EXISTS idx_loan_checkouts_returned ON loan_checkouts(returned_at);
     CREATE INDEX IF NOT EXISTS idx_loan_checkouts_computer ON loan_checkouts(computer_asset_id);
@@ -354,6 +355,60 @@ function migrateLoanAssetBrandAbittiIfNeeded() {
   }
 }
 migrateLoanAssetBrandAbittiIfNeeded();
+
+/** Charger-only loans: nullable computer_asset_id (FK still references loan_assets). */
+function migrateLoanCheckoutNullablePrimaryIfNeeded() {
+  const cols = db.prepare('PRAGMA table_info(loan_checkouts)').all();
+  const comp = cols.find((c) => c.name === 'computer_asset_id');
+  if (!comp || comp.notnull === 0) return;
+
+  const rows = db.prepare('SELECT * FROM loan_checkouts').all();
+  db.exec('PRAGMA foreign_keys = OFF');
+  db.exec('BEGIN TRANSACTION');
+  db.exec('DROP TABLE loan_checkouts');
+  db.exec(`
+    CREATE TABLE loan_checkouts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      computer_asset_id INTEGER REFERENCES loan_assets(id),
+      charger_asset_id INTEGER REFERENCES loan_assets(id),
+      borrower_name TEXT NOT NULL,
+      borrower_role TEXT NOT NULL CHECK(borrower_role IN ('pupil', 'staff', 'other')),
+      signature_png BLOB,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      returned_at TEXT,
+      CHECK (computer_asset_id IS NOT NULL OR charger_asset_id IS NOT NULL)
+    );
+    CREATE INDEX idx_loan_checkouts_returned ON loan_checkouts(returned_at);
+    CREATE INDEX idx_loan_checkouts_computer ON loan_checkouts(computer_asset_id);
+  `);
+  const ins = db.prepare(
+    `INSERT INTO loan_checkouts (
+      id, computer_asset_id, charger_asset_id, borrower_name, borrower_role, signature_png, created_at, returned_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+  );
+  for (const c of rows) {
+    ins.run(
+      c.id,
+      c.computer_asset_id,
+      c.charger_asset_id,
+      c.borrower_name,
+      c.borrower_role,
+      c.signature_png,
+      c.created_at,
+      c.returned_at
+    );
+  }
+  db.exec('COMMIT');
+  db.exec('PRAGMA foreign_keys = ON');
+  const maxC = db.prepare('SELECT COALESCE(MAX(id), 0) AS m FROM loan_checkouts').get().m;
+  try {
+    db.prepare('DELETE FROM sqlite_sequence WHERE name = ?').run('loan_checkouts');
+    if (maxC) db.prepare('INSERT INTO sqlite_sequence (name, seq) VALUES (?, ?)').run('loan_checkouts', maxC);
+  } catch (_e) {
+    /* ignore */
+  }
+}
+migrateLoanCheckoutNullablePrimaryIfNeeded();
 
 const { randomUUID } = require('crypto');
 
@@ -953,30 +1008,52 @@ function isChargerAssetAvailable(assetId) {
 }
 
 function createLoanCheckout(data) {
-  const primaryId = Number(data.primaryAssetId ?? data.computerAssetId);
-  const chargerId =
+  const name = String(data.borrowerName || '').trim();
+  if (!name) return { ok: false, error: 'Name required' };
+  const role = String(data.borrowerRole || 'other').toLowerCase();
+  if (!['pupil', 'staff', 'other'].includes(role)) {
+    return { ok: false, error: 'Invalid role' };
+  }
+
+  const rawP = data.primaryAssetId ?? data.computerAssetId;
+  if (rawP == null || rawP === '') return { ok: false, error: 'No item selected' };
+  const primaryId = Number(rawP);
+  const chargerExtra =
     data.chargerAssetId != null && data.chargerAssetId !== ''
       ? Number(data.chargerAssetId)
       : null;
-  const cRow = db.prepare('SELECT id, kind FROM loan_assets WHERE id = ?').get(primaryId);
-  if (!cRow || (cRow.kind !== 'computer' && cRow.kind !== 'other')) {
+
+  const pRow = db.prepare('SELECT id, kind FROM loan_assets WHERE id = ?').get(primaryId);
+  if (!pRow) return { ok: false, error: 'Invalid item' };
+
+  if (pRow.kind === 'charger') {
+    if (chargerExtra) return { ok: false, error: 'Invalid loan request' };
+    if (!isChargerAssetAvailable(primaryId)) {
+      return { ok: false, error: 'That charger is not available' };
+    }
+    const info = db
+      .prepare(
+        `INSERT INTO loan_checkouts (
+          computer_asset_id, charger_asset_id, borrower_name, borrower_role, signature_png
+        ) VALUES (NULL, ?, ?, ?, NULL)`
+      )
+      .run(primaryId, name, role);
+    return { ok: true, id: info.lastInsertRowid };
+  }
+
+  if (pRow.kind !== 'computer' && pRow.kind !== 'other') {
     return { ok: false, error: 'Invalid main item (computer or other)' };
   }
   if (!isPrimaryAssetAvailable(primaryId)) {
     return { ok: false, error: 'That item is not available' };
   }
+  let chargerId = chargerExtra;
   if (chargerId) {
     const chRow = db.prepare('SELECT id, kind FROM loan_assets WHERE id = ?').get(chargerId);
     if (!chRow || chRow.kind !== 'charger') return { ok: false, error: 'Invalid charger' };
     if (!isChargerAssetAvailable(chargerId)) {
       return { ok: false, error: 'That charger is not available' };
     }
-  }
-  const name = String(data.borrowerName || '').trim();
-  if (!name) return { ok: false, error: 'Name required' };
-  const role = String(data.borrowerRole || 'other').toLowerCase();
-  if (!['pupil', 'staff', 'other'].includes(role)) {
-    return { ok: false, error: 'Invalid role' };
   }
   const info = db
     .prepare(
@@ -1006,15 +1083,20 @@ function getLoanStatus() {
     .prepare(
       `SELECT c.id AS checkout_id, c.computer_asset_id, c.charger_asset_id,
               c.borrower_name, c.borrower_role, c.created_at,
-              prim.name AS primary_name, prim.kind AS primary_kind,
-              pb.name AS primary_brand_name,
-              pv.label AS primary_abitti2_version_label,
-              chg.name AS charger_name
+              COALESCE(prim.name, chg.name) AS primary_name,
+              COALESCE(prim.kind, chg.kind) AS primary_kind,
+              COALESCE(pb.name, CASE WHEN prim.id IS NULL THEN chg_b.name ELSE NULL END) AS primary_brand_name,
+              CASE WHEN prim.id IS NOT NULL THEN pv.label ELSE NULL END AS primary_abitti2_version_label,
+              CASE
+                WHEN c.computer_asset_id IS NOT NULL AND c.charger_asset_id IS NOT NULL THEN chg.name
+                ELSE NULL
+              END AS charger_name
        FROM loan_checkouts c
-       JOIN loan_assets prim ON prim.id = c.computer_asset_id
-       LEFT JOIN brands pb ON pb.id = prim.brand_id
-       LEFT JOIN abitti2_versions pv ON pv.id = prim.abitti2_version_id
+       LEFT JOIN loan_assets prim ON prim.id = c.computer_asset_id
        LEFT JOIN loan_assets chg ON chg.id = c.charger_asset_id
+       LEFT JOIN brands pb ON pb.id = prim.brand_id
+       LEFT JOIN brands chg_b ON chg_b.id = chg.brand_id
+       LEFT JOIN abitti2_versions pv ON pv.id = prim.abitti2_version_id
        WHERE c.returned_at IS NULL
        ORDER BY c.created_at DESC`
     )
@@ -1022,8 +1104,8 @@ function getLoanStatus() {
   const byPrimary = new Map();
   const byCharger = new Map();
   for (const row of active) {
-    byPrimary.set(row.computer_asset_id, row);
-    if (row.charger_asset_id) byCharger.set(row.charger_asset_id, row);
+    if (row.computer_asset_id != null) byPrimary.set(row.computer_asset_id, row);
+    if (row.charger_asset_id != null) byCharger.set(row.charger_asset_id, row);
   }
   const items = assets.map((a) => {
     let checkout = null;
@@ -1056,15 +1138,20 @@ function listLoanHistory(limit) {
   return db
     .prepare(
       `SELECT c.id, c.created_at, c.returned_at, c.borrower_name, c.borrower_role,
-              prim.name AS primary_name, prim.kind AS primary_kind,
-              pb.name AS primary_brand_name,
-              pv.label AS primary_abitti2_version_label,
-              chg.name AS charger_name
+              COALESCE(prim.name, chg.name) AS primary_name,
+              COALESCE(prim.kind, chg.kind) AS primary_kind,
+              COALESCE(pb.name, CASE WHEN prim.id IS NULL THEN chg_b.name ELSE NULL END) AS primary_brand_name,
+              CASE WHEN prim.id IS NOT NULL THEN pv.label ELSE NULL END AS primary_abitti2_version_label,
+              CASE
+                WHEN c.computer_asset_id IS NOT NULL AND c.charger_asset_id IS NOT NULL THEN chg.name
+                ELSE NULL
+              END AS charger_name
        FROM loan_checkouts c
-       JOIN loan_assets prim ON prim.id = c.computer_asset_id
-       LEFT JOIN brands pb ON pb.id = prim.brand_id
-       LEFT JOIN abitti2_versions pv ON pv.id = prim.abitti2_version_id
+       LEFT JOIN loan_assets prim ON prim.id = c.computer_asset_id
        LEFT JOIN loan_assets chg ON chg.id = c.charger_asset_id
+       LEFT JOIN brands pb ON pb.id = prim.brand_id
+       LEFT JOIN brands chg_b ON chg_b.id = chg.brand_id
+       LEFT JOIN abitti2_versions pv ON pv.id = prim.abitti2_version_id
        ORDER BY c.created_at DESC
        LIMIT ?`
     )
