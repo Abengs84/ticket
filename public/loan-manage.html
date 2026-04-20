@@ -16,27 +16,28 @@
   </head>
   <body>
     <div class="wrap">
-      <nav class="main-nav" aria-label="Main sections">
-        <a href="/" data-i18n="navTickets">Tickets</a>
-        <a href="/devices" data-i18n="navDevices">Devices</a>
-        <a href="/reports" data-i18n="navReports">Reports</a>
-        <a href="/loan-computers" data-i18n="navLoan">Loan computers</a>
-      </nav>
-
       <header class="app-header">
-        <div class="brand">
-          <strong data-i18n="loanManageTitle">Loan inventory</strong>
-          <span data-i18n="loanManageSubtitle">Add computers, chargers, and other loanable items</span>
-        </div>
-        <div class="header-actions">
-          <label class="lang-select-wrap" style="display: flex; align-items: center; gap: 0.35rem; font-size: 0.85rem; color: var(--muted)">
-            <span data-i18n="langLabel">Language</span>
-            <select id="langSelect" class="lang-select" aria-label="Language">
-              <option value="en" data-i18n="langEn">English</option>
-              <option value="sv" data-i18n="langSv">Svenska</option>
-            </select>
-          </label>
-          <button type="button" class="theme-toggle" id="themeToggle" data-i18n-title="themeToggleTitle" title="Toggle theme">🌙</button>
+        <div class="app-header-bar">
+          <div class="brand">
+            <strong data-i18n="loanManageTitle">Loan inventory</strong>
+            <span data-i18n="loanManageSubtitle">Add computers, chargers, and other loanable items</span>
+          </div>
+          <nav class="main-nav" aria-label="Main sections">
+            <a href="/" data-i18n="navTickets">Tickets</a>
+            <a href="/devices" data-i18n="navDevices">Devices</a>
+            <a href="/reports" data-i18n="navReports">Reports</a>
+            <a href="/loan-computers" aria-current="page" data-i18n="navLoan">Loan computers</a>
+          </nav>
+          <div class="header-actions">
+            <label class="lang-select-wrap" style="display: flex; align-items: center; gap: 0.35rem; font-size: 0.85rem; color: var(--muted)">
+              <span data-i18n="langLabel">Language</span>
+              <select id="langSelect" class="lang-select" aria-label="Language">
+                <option value="en" data-i18n="langEn">English</option>
+                <option value="sv" data-i18n="langSv">Svenska</option>
+              </select>
+            </label>
+            <button type="button" class="theme-toggle" id="themeToggle" data-i18n-title="themeToggleTitle" title="Toggle theme">🌙</button>
+          </div>
         </div>
       </header>
 

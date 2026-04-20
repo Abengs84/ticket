@@ -1115,6 +1115,7 @@ function getLoanStatus() {
       id: a.id,
       kind: a.kind,
       name: a.name,
+      sortOrder: a.sort_order,
       brandId: a.brandId,
       brandName: a.brandName,
       abitti2VersionId: a.abitti2VersionId,

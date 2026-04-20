@@ -76,14 +76,97 @@ a:hover {
   padding: 1rem 1.25rem 3rem;
 }
 
-.main-nav {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-  margin: 0 0 1rem;
-  padding-bottom: 0.75rem;
+/* Merged top bar: brand + main nav + actions. Sticky; actions stay in last grid column. */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 90;
+  background: var(--bg);
+  margin-bottom: 1rem;
+  padding: 0.4rem 0 0.65rem;
   border-bottom: 1px solid var(--border);
 }
+
+.app-header-bar {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.5rem 1.25rem;
+}
+
+.app-header .brand {
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+  flex: 0 0 clamp(11rem, 20vw, 16.5rem);
+  min-width: 0;
+  max-width: clamp(11rem, 20vw, 16.5rem);
+}
+
+.app-header .brand strong {
+  font-size: 1.2rem;
+  font-family: var(--font-display);
+}
+
+.app-header .brand span {
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.app-header .main-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  flex: 1 1 auto;
+  margin: 0;
+  padding: 0;
+  padding-inline-end: clamp(13rem, 26vw, 26rem);
+  border: none;
+  min-width: 0;
+}
+
+.app-header .header-actions {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  flex-shrink: 0;
+  min-width: min-content;
+}
+
+/* Pin actions to the wrap’s right edge so they don’t shift when the title or nav changes. */
+@media (min-width: 769px) {
+  .app-header .header-actions {
+    position: absolute;
+    top: 0.35rem;
+    right: 0;
+    z-index: 1;
+  }
+}
+
+@media (max-width: 768px) {
+  .app-header .main-nav {
+    padding-inline-end: 0;
+    flex: 1 1 100%;
+    order: 3;
+  }
+
+  .app-header .brand {
+    flex: 1 1 auto;
+    max-width: none;
+    order: 1;
+  }
+
+  .app-header .header-actions {
+    position: static;
+    order: 2;
+    margin-left: auto;
+  }
+}
+
 .main-nav a {
   padding: 0.45rem 0.9rem;
   border-radius: 8px;
@@ -104,38 +187,6 @@ a:hover {
 .main-nav a[aria-current='page']:hover {
   color: #fff;
   background: var(--accent-hover);
-}
-
-header.app-header {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 1rem;
-  justify-content: space-between;
-  margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid var(--border);
-}
-
-.brand {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-}
-.brand strong {
-  font-size: 1.35rem;
-  font-family: var(--font-display);
-}
-.brand span {
-  font-size: 0.85rem;
-  color: var(--muted);
-}
-
-.header-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  align-items: center;
 }
 
 .lang-select {
@@ -459,7 +510,7 @@ table.tickets tbody tr:hover {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.45);
-  z-index: 100;
+  z-index: 200;
   display: flex;
   align-items: flex-start;
   justify-content: center;
@@ -605,6 +656,12 @@ table.tickets tbody tr:hover {
 }
 
 @media print {
+  html {
+    font-size: 16px !important;
+  }
+  .app-header {
+    position: static;
+  }
   body * {
     visibility: hidden;
   }
@@ -633,9 +690,13 @@ table.tickets tbody tr:hover {
   padding: 1rem;
 }
 
+.view-public .app-header {
+  border-bottom: none;
+  padding-top: 0.35rem;
+}
+
 /* Phones / small screens: public ticket is read-only; hide staff nav and header chrome */
 @media (max-width: 768px) {
-  .view-public .main-nav,
   .view-public .app-header {
     display: none !important;
   }
@@ -675,4 +736,35 @@ table.tickets tbody tr:hover {
 .err {
   color: var(--danger);
   padding: 1rem;
+}
+
+/* Wide / high-DPI desktops: larger type and layout (~150% vs 16px root). Kiosk stays base size. */
+@media (min-width: 1600px) {
+  html {
+    font-size: 150%;
+  }
+
+  html:has(body.loan-kiosk-body) {
+    font-size: 100%;
+  }
+
+  .wrap {
+    max-width: 1800px;
+  }
+
+  .modal {
+    max-width: 960px;
+  }
+
+  #print-area {
+    max-width: 1080px;
+  }
+
+  .view-public .wrap {
+    max-width: 860px;
+  }
+
+  .qr-block img {
+    max-width: 300px;
+  }
 }

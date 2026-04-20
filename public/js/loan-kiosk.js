@@ -34,16 +34,43 @@
     }, 5000);
   }
 
+  const KIOSK_PRIMARY_KIND_ORDER = { computer: 0, charger: 1, other: 2 };
+
+  function sortKioskPrimaryItems(items) {
+    return [...items].sort((a, b) => {
+      const ra = KIOSK_PRIMARY_KIND_ORDER[a.kind] ?? 99;
+      const rb = KIOSK_PRIMARY_KIND_ORDER[b.kind] ?? 99;
+      if (ra !== rb) return ra - rb;
+      const sa = Number(a.sortOrder) || 0;
+      const sb = Number(b.sortOrder) || 0;
+      if (sa !== sb) return sa - sb;
+      return (a.name || '').localeCompare(b.name || '', undefined, { sensitivity: 'base' });
+    });
+  }
+
+  function sortKioskChargers(items) {
+    return [...items].sort((a, b) => {
+      const sa = Number(a.sortOrder) || 0;
+      const sb = Number(b.sortOrder) || 0;
+      if (sa !== sb) return sa - sb;
+      return (a.name || '').localeCompare(b.name || '', undefined, { sensitivity: 'base' });
+    });
+  }
+
   async function loadOptions() {
     const res = await fetch('/api/loan/status');
     if (!res.ok) throw new Error(t('kioskMsgLoadFail'));
     const data = await res.json();
-    const primaryItems = data.items.filter(
-      (i) =>
-        i.available &&
-        (i.kind === 'computer' || i.kind === 'other' || i.kind === 'charger')
+    const primaryItems = sortKioskPrimaryItems(
+      data.items.filter(
+        (i) =>
+          i.available &&
+          (i.kind === 'computer' || i.kind === 'other' || i.kind === 'charger')
+      )
     );
-    const chargers = data.items.filter((i) => i.kind === 'charger' && i.available);
+    const chargers = sortKioskChargers(
+      data.items.filter((i) => i.kind === 'charger' && i.available)
+    );
 
     const selC = $('#primaryId');
     const selH = $('#chargerId');
