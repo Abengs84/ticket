@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <title data-i18n="loanAbitti2DocTitle">Abitti2 versions — School IT Tickets</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,700&family=Outfit:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/loan.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="app-header">
+        <div class="app-header-bar">
+          <div class="brand">
+            <strong data-i18n="loanAbitti2PageTitle">Abitti2 versions</strong>
+            <span data-i18n="loanAbitti2PageSubtitle">Add labels for Abitti2 builds used on loan computers</span>
+          </div>
+          <nav class="main-nav" aria-label="Main sections">
+            <a href="/" data-i18n="navTickets">Tickets</a>
+            <a href="/devices" data-i18n="navDevices">Devices</a>
+            <a href="/reports" data-i18n="navReports">Reports</a>
+            <a href="/loan-computers" aria-current="page" data-i18n="navLoan">Loan computers</a>
+          </nav>
+          <div class="header-actions">
+            <label class="lang-select-wrap" style="display: flex; align-items: center; gap: 0.35rem; font-size: 0.85rem; color: var(--muted)">
+              <span data-i18n="langLabel">Language</span>
+              <select id="langSelect" class="lang-select" aria-label="Language">
+                <option value="en" data-i18n="langEn">English</option>
+                <option value="sv" data-i18n="langSv">Svenska</option>
+              </select>
+            </label>
+            <button type="button" class="theme-toggle" id="themeToggle" data-i18n-title="themeToggleTitle" title="Toggle theme">🌙</button>
+          </div>
+        </div>
+      </header>
+
+      <nav class="loan-subnav" aria-label="Loan computers sections">
+        <a href="/loan-computers" data-i18n="loanSubOverview">Overview</a>
+        <a href="/loan-computers/manage" data-i18n="loanSubManage">Manage inventory</a>
+        <a href="/loan-computers/kiosk" data-i18n="loanSubKiosk">Borrow (kiosk)</a>
+        <a href="/loan-computers/history" data-i18n="loanSubHistory">History</a>
+        <a href="/loan-computers/abitti2" aria-current="page" data-i18n="loanSubAbitti2">Abitti2 versions</a>
+      </nav>
+
+      <section class="card loan-abitti2-section">
+        <div class="section-head">
+          <h2 data-i18n="loanAbitti2SectionH2">Registered versions</h2>
+          <button type="button" class="btn btn-primary" id="btnAddAbitti2" data-i18n="loanAbitti2Add">Add version</button>
+        </div>
+        <ul class="loan-asset-list" id="listAbitti2"></ul>
+        <p id="abitti2Empty" style="color: var(--muted); display: none" data-i18n="loanAbitti2Empty">No versions yet.</p>
+      </section>
+    </div>
+
+    <div class="modal-backdrop" id="abitti2ModalBackdrop" hidden role="dialog" aria-modal="true" aria-labelledby="abitti2ModalTitle">
+      <div class="modal">
+        <div class="modal-head">
+          <h2 id="abitti2ModalTitle">Add Abitti2 version</h2>
+          <button type="button" class="btn btn-ghost" id="abitti2ModalCloseX" data-i18n-aria="closeAria" aria-label="Close">✕</button>
+        </div>
+        <div class="modal-body">
+          <form id="abitti2ModalForm" class="form-grid">
+            <input type="hidden" id="modalAbitti2Id" value="" />
+            <label>
+              <span data-i18n="loanColAbitti2">Abitti2 version</span>
+              <input
+                type="text"
+                id="modalAbitti2Label"
+                data-i18n-placeholder="loanAbitti2LabelPh"
+                placeholder="e.g. 2.14"
+                maxlength="120"
+                required
+              />
+            </label>
+          </form>
+        </div>
+        <div class="modal-foot">
+          <button type="button" class="btn" id="abitti2ModalCancel" data-i18n="devCancel">Cancel</button>
+          <button type="submit" form="abitti2ModalForm" class="btn btn-primary" id="abitti2ModalSubmit">Add version</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="/js/i18n.js"></script>
+    <script src="/js/theme.js"></script>
+    <script src="/js/loan-abitti2.js"></script>
+  </body>
+</html>

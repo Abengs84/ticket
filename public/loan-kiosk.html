@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <title data-i18n="kioskTitle">Loan equipment</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,700&family=Outfit:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/loan.css" />
+  </head>
+  <body class="loan-kiosk-body">
+    <main class="loan-kiosk-wrap">
+      <div class="loan-kiosk-topbar">
+        <h1 style="margin: 0" data-i18n="kioskTitle">Loan equipment</h1>
+        <div class="loan-kiosk-topbar-actions">
+          <label class="lang-select-wrap" style="display: flex; align-items: center; gap: 0.35rem; font-size: 0.85rem; color: var(--muted)">
+            <span data-i18n="langLabel">Language</span>
+            <select id="langSelect" class="lang-select" aria-label="Language">
+              <option value="en" data-i18n="langEn">English</option>
+              <option value="sv" data-i18n="langSv">Svenska</option>
+            </select>
+          </label>
+          <button type="button" class="theme-toggle" id="themeToggle" data-i18n-title="themeToggleTitle" title="Toggle theme">🌙</button>
+        </div>
+      </div>
+
+      <div id="kioskThankYou" class="loan-kiosk-thank-banner" hidden role="status" data-i18n="kioskMsgThanks">
+        Loan recorded. Thank you!
+      </div>
+
+      <div id="stepForm" class="loan-kiosk-panel">
+        <div class="field">
+          <label for="borrowerName" data-i18n="kioskYourName">Your name</label>
+          <input type="text" id="borrowerName" name="borrowerName" autocomplete="name" required />
+        </div>
+        <div class="field">
+          <label for="borrowerRole" data-i18n="kioskIAmA">I am a</label>
+          <select id="borrowerRole" name="borrowerRole">
+            <option value="pupil" data-i18n="kioskRolePupil">Pupil</option>
+            <option value="staff" data-i18n="kioskRoleStaff">Teacher / staff</option>
+            <option value="other" data-i18n="kioskRoleOther">Other</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="primaryId" data-i18n="kioskMainItem">Equipment to borrow</label>
+          <select id="primaryId" required></select>
+        </div>
+        <div class="field" id="chargerFieldWrap">
+          <label for="chargerId" data-i18n="kioskChargerOpt">Charger (optional)</label>
+          <select id="chargerId">
+            <option value="" data-i18n="kioskNoCharger">No charger</option>
+          </select>
+        </div>
+        <div class="loan-kiosk-actions">
+          <button type="button" class="btn btn-primary" id="btnLoanComputer" data-i18n="kioskRecordLoan">Record loan</button>
+        </div>
+      </div>
+
+      <p class="loan-kiosk-note" id="kioskMsg" role="status"></p>
+    </main>
+    <script src="/js/i18n.js"></script>
+    <script src="/js/theme.js"></script>
+    <script src="/js/loan-kiosk.js"></script>
+  </body>
+</html>

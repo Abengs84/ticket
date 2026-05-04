@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#1c222b" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <title>Ticket — School IT</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600&family=Outfit:wght@600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body class="view-public">
+    <div class="wrap">
+      <header class="app-header">
+        <div class="app-header-bar">
+          <div class="brand">
+            <strong>School IT</strong>
+            <span>Ticket reference</span>
+          </div>
+          <nav class="main-nav" aria-label="Main sections">
+            <a href="/">Tickets</a>
+            <a href="/devices">Devices</a>
+            <a href="/reports">Reports</a>
+            <a href="/loan-computers">Loan computers</a>
+          </nav>
+          <div class="header-actions">
+            <button type="button" class="theme-toggle" id="themeToggle" title="Theme">🌙</button>
+            <button type="button" class="btn" id="btnPrint">Print</button>
+          </div>
+        </div>
+      </header>
+
+      <main id="main">
+        <p class="loading" id="stateLoad">Loading ticket…</p>
+        <p class="err" id="stateErr" hidden></p>
+        <div id="card" hidden class="view-card">
+          <h1 style="font-size: 1.35rem; margin-bottom: 1rem" id="vTitle"></h1>
+          <dl>
+            <div>
+              <dt>Description</dt>
+              <dd id="vDesc" style="white-space: pre-wrap"></dd>
+            </div>
+            <div>
+              <dt>Reporter</dt>
+              <dd id="vReporter"></dd>
+            </div>
+            <div>
+              <dt>Category / Priority / Status</dt>
+              <dd id="vMeta"></dd>
+            </div>
+            <div id="vDeviceWrap" hidden>
+              <dt>Device</dt>
+              <dd id="vDevice"></dd>
+            </div>
+            <div id="vResolutionWrap" hidden>
+              <dt>What solved it</dt>
+              <dd id="vResolution" style="white-space: pre-wrap"></dd>
+            </div>
+            <div>
+              <dt>Tags</dt>
+              <dd id="vTags"></dd>
+            </div>
+            <div>
+              <dt>Attachments</dt>
+              <dd id="vAttach"></dd>
+            </div>
+            <div>
+              <dt>Timeline</dt>
+              <dd id="vTime"></dd>
+            </div>
+          </dl>
+        </div>
+      </main>
+    </div>
+    <div id="print-area"></div>
+    <script src="/js/loan-datetime.js"></script>
+    <script src="/js/view.js"></script>
+  </body>
+</html>

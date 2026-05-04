@@ -1,0 +1,15 @@
+services:
+  tickets:
+    build: .
+    ports:
+      - "3004:3004"
+    environment:
+      PORT: "3004"
+      # Set to the URL users reach in the browser so QR codes work (LAN IP or hostname).
+      # Example: BASE_URL: "http://192.168.1.50:3004"
+      BASE_URL: "${BASE_URL:-http://localhost:3004}"
+    volumes:
+      - ticket-data:/app/data
+
+volumes:
+  ticket-data:

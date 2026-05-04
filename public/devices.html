@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <title data-i18n="devDocTitle">Devices — School IT Tickets</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,700&family=Outfit:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="app-header">
+        <div class="app-header-bar">
+          <div class="brand">
+            <strong data-i18n="devPageTitle">Devices &amp; brands</strong>
+            <span data-i18n="devPageSubtitle">Manage hardware inventory for hardware tickets</span>
+          </div>
+          <nav class="main-nav" aria-label="Main sections">
+            <a href="/" data-i18n="navTickets">Tickets</a>
+            <a href="/devices" aria-current="page" data-i18n="navDevices">Devices</a>
+            <a href="/reports" data-i18n="navReports">Reports</a>
+            <a href="/loan-computers" data-i18n="navLoan">Loan computers</a>
+          </nav>
+          <div class="header-actions">
+            <label class="lang-select-wrap" style="display: flex; align-items: center; gap: 0.35rem; font-size: 0.85rem; color: var(--muted)">
+              <span data-i18n="langLabel">Language</span>
+              <select id="langSelect" class="lang-select" aria-label="Language">
+                <option value="en" data-i18n="langEn">English</option>
+                <option value="sv" data-i18n="langSv">Svenska</option>
+              </select>
+            </label>
+            <button type="button" class="theme-toggle" id="themeToggle" data-i18n-title="themeToggleTitle" title="Toggle theme">🌙</button>
+          </div>
+        </div>
+      </header>
+
+      <section class="card" style="margin-bottom: 1.5rem">
+        <div class="section-head">
+          <h2 data-i18n="devBrandsH2">Brands</h2>
+          <button type="button" class="btn btn-primary" id="openBrandModalBtn" data-i18n="devAddBrand">Add brand</button>
+        </div>
+        <div class="table-wrap">
+          <table class="tickets">
+            <thead>
+              <tr>
+                <th data-i18n="devThName">Name</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="brandRows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="section-head">
+          <h2 data-i18n="devDevicesH2">Devices</h2>
+          <button type="button" class="btn btn-primary" id="openDeviceModalBtn" data-i18n="devAddDevice">Add device</button>
+        </div>
+        <p style="margin: 0 0 1rem; font-size: 0.9rem; color: var(--muted)" data-i18n="devDevicesBlurb">
+          Type: printer, computer, peripheral, or other. Each device is linked to a brand.
+        </p>
+        <div class="table-wrap">
+          <table class="tickets">
+            <thead>
+              <tr>
+                <th data-i18n="devThType">Type</th>
+                <th data-i18n="devThBrand">Brand</th>
+                <th data-i18n="devThLabel">Label</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="deviceRows"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <div class="modal-backdrop" id="brandModalBackdrop" hidden role="dialog" aria-modal="true" aria-labelledby="brandModalTitle">
+      <div class="modal">
+        <div class="modal-head">
+          <h2 id="brandModalTitle">Add brand</h2>
+          <button type="button" class="btn btn-ghost" id="brandModalCloseX" data-i18n-aria="closeAria" aria-label="Close">✕</button>
+        </div>
+        <div class="modal-body">
+          <form id="brandModalForm" class="form-grid">
+            <label>
+              <span data-i18n="devNewBrandLabel">New brand name</span>
+              <input
+                type="text"
+                id="modalBrandName"
+                data-i18n-placeholder="devNewBrandPh"
+                placeholder="e.g. HP, Dell, Canon"
+                maxlength="200"
+                required
+              />
+            </label>
+          </form>
+        </div>
+        <div class="modal-foot">
+          <button type="button" class="btn" id="brandModalCancel" data-i18n="devCancel">Cancel</button>
+          <button type="submit" form="brandModalForm" class="btn btn-primary" id="brandModalSubmit">Add brand</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-backdrop" id="deviceModalBackdrop" hidden role="dialog" aria-modal="true" aria-labelledby="deviceModalTitle">
+      <div class="modal">
+        <div class="modal-head">
+          <h2 id="deviceModalTitle">Add device</h2>
+          <button type="button" class="btn btn-ghost" id="deviceModalCloseX" data-i18n-aria="closeAria" aria-label="Close">✕</button>
+        </div>
+        <div class="modal-body">
+          <form id="deviceModalForm" class="form-grid">
+            <div class="form-row-2">
+              <label>
+                <span data-i18n="devTypeLabel">Type *</span>
+                <select id="modalDevType" required>
+                  <option value="printer" data-i18n="typePrinter">Printer</option>
+                  <option value="computer" data-i18n="typeComputer">Computer</option>
+                  <option value="peripheral" data-i18n="typePeripheral">Peripheral</option>
+                  <option value="other" data-i18n="typeOther">Other</option>
+                </select>
+              </label>
+              <label>
+                <span data-i18n="devBrandLabel">Brand *</span>
+                <select id="modalDevBrandId" required></select>
+              </label>
+            </div>
+            <label class="dev-label-field">
+              <span data-i18n="devLabelNote">Label / note (optional)</span>
+              <input type="text" id="modalDevLabel" data-i18n-placeholder="devLabelPh" placeholder="e.g. Lab 3, Main office MFP" maxlength="500" />
+            </label>
+          </form>
+        </div>
+        <div class="modal-foot">
+          <button type="button" class="btn" id="deviceModalCancel" data-i18n="devCancel">Cancel</button>
+          <button type="submit" form="deviceModalForm" class="btn btn-primary" id="deviceModalSubmit">Add device</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="/js/i18n.js"></script>
+    <script src="/js/devices.js"></script>
+  </body>
+</html>

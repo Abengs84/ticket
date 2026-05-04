@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <title data-i18n="loanManageDocTitle">Loan inventory — School IT Tickets</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,700&family=Outfit:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/loan.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="app-header">
+        <div class="app-header-bar">
+          <div class="brand">
+            <strong data-i18n="loanManageTitle">Loan inventory</strong>
+            <span data-i18n="loanManageSubtitle">Add computers, chargers, and other loanable items</span>
+          </div>
+          <nav class="main-nav" aria-label="Main sections">
+            <a href="/" data-i18n="navTickets">Tickets</a>
+            <a href="/devices" data-i18n="navDevices">Devices</a>
+            <a href="/reports" data-i18n="navReports">Reports</a>
+            <a href="/loan-computers" aria-current="page" data-i18n="navLoan">Loan computers</a>
+          </nav>
+          <div class="header-actions">
+            <label class="lang-select-wrap" style="display: flex; align-items: center; gap: 0.35rem; font-size: 0.85rem; color: var(--muted)">
+              <span data-i18n="langLabel">Language</span>
+              <select id="langSelect" class="lang-select" aria-label="Language">
+                <option value="en" data-i18n="langEn">English</option>
+                <option value="sv" data-i18n="langSv">Svenska</option>
+              </select>
+            </label>
+            <button type="button" class="theme-toggle" id="themeToggle" data-i18n-title="themeToggleTitle" title="Toggle theme">🌙</button>
+          </div>
+        </div>
+      </header>
+
+      <nav class="loan-subnav" aria-label="Loan computers sections">
+        <a href="/loan-computers" data-i18n="loanSubOverview">Overview</a>
+        <a href="/loan-computers/manage" aria-current="page" data-i18n="loanSubManage">Manage inventory</a>
+        <a href="/loan-computers/kiosk" data-i18n="loanSubKiosk">Borrow (kiosk)</a>
+        <a href="/loan-computers/history" data-i18n="loanSubHistory">History</a>
+        <a href="/loan-computers/abitti2" data-i18n="loanSubAbitti2">Abitti2 versions</a>
+      </nav>
+
+      <div class="loan-manage-toolbar">
+        <div
+          class="loan-manage-kind-toggle"
+          role="tablist"
+          data-i18n-aria="loanManageTabListAria"
+          aria-label="Inventory category"
+        >
+          <button
+            type="button"
+            id="tabManageComputers"
+            class="loan-manage-tab"
+            role="tab"
+            aria-selected="true"
+            aria-controls="panelManageComputers"
+            data-kind="computer"
+            data-i18n="loanSecComputers"
+          >
+            Computers
+          </button>
+          <button
+            type="button"
+            id="tabManageChargers"
+            class="loan-manage-tab"
+            role="tab"
+            aria-selected="false"
+            tabindex="-1"
+            aria-controls="panelManageChargers"
+            data-kind="charger"
+            data-i18n="loanSecChargers"
+          >
+            Chargers
+          </button>
+          <button
+            type="button"
+            id="tabManageOther"
+            class="loan-manage-tab"
+            role="tab"
+            aria-selected="false"
+            tabindex="-1"
+            aria-controls="panelManageOther"
+            data-kind="other"
+            data-i18n="loanSecOther"
+          >
+            Other
+          </button>
+        </div>
+      </div>
+
+      <section class="loan-manage-panels">
+        <div id="panelManageComputers" class="loan-manage-panel card" role="tabpanel" aria-labelledby="tabManageComputers">
+          <div class="section-head">
+            <h2 data-i18n="loanSecComputers">Computers</h2>
+            <button type="button" class="btn btn-primary" id="btnAddComputer" data-i18n="loanAddComputer">Add computer</button>
+          </div>
+          <ul class="loan-asset-list" id="listComputers"></ul>
+        </div>
+        <div id="panelManageChargers" class="loan-manage-panel card" role="tabpanel" aria-labelledby="tabManageChargers" hidden>
+          <div class="section-head">
+            <h2 data-i18n="loanSecChargers">Chargers</h2>
+            <button type="button" class="btn btn-primary" id="btnAddCharger" data-i18n="loanAddCharger">Add charger</button>
+          </div>
+          <ul class="loan-asset-list" id="listChargers"></ul>
+        </div>
+        <div id="panelManageOther" class="loan-manage-panel card" role="tabpanel" aria-labelledby="tabManageOther" hidden>
+          <div class="section-head">
+            <h2 data-i18n="loanSecOther">Other</h2>
+            <button type="button" class="btn btn-primary" id="btnAddOther" data-i18n="loanAddOther">Add other</button>
+          </div>
+          <ul class="loan-asset-list" id="listOther"></ul>
+        </div>
+      </section>
+    </div>
+
+    <div class="modal-backdrop" id="loanManageModalBackdrop" hidden role="dialog" aria-modal="true" aria-labelledby="loanManageModalTitle">
+      <div class="modal">
+        <div class="modal-head">
+          <h2 id="loanManageModalTitle">Add computer</h2>
+          <button type="button" class="btn btn-ghost" id="loanManageModalCloseX" data-i18n-aria="closeAria" aria-label="Close">✕</button>
+        </div>
+        <div class="modal-body">
+          <form id="loanManageModalForm" class="form-grid">
+            <input type="hidden" id="modalLoanKind" value="computer" />
+            <input type="hidden" id="modalLoanAssetId" value="" />
+            <label>
+              <span data-i18n="loanNameLabel">Name / label</span>
+              <input type="text" id="modalLoanName" maxlength="500" required />
+            </label>
+            <label>
+              <span
+                class="loan-brand-label"
+                data-i18n="loanBrandOptional"
+                data-i18n-title="loanBrandHintTitle"
+                title="Brands are managed under Devices in the main menu — add or edit them there first."
+                >Brand (optional)</span>
+              <select id="modalLoanBrand"></select>
+            </label>
+            <label id="modalLoanAbittiWrap">
+              <span data-i18n="loanAbitti2Optional">Abitti2 version (optional)</span>
+              <select id="modalLoanAbitti"></select>
+            </label>
+          </form>
+        </div>
+        <div class="modal-foot">
+          <button type="button" class="btn" id="loanManageModalCancel" data-i18n="devCancel">Cancel</button>
+          <button type="submit" form="loanManageModalForm" class="btn btn-primary" id="loanManageModalSubmit">Add computer</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="/js/i18n.js"></script>
+    <script src="/js/theme.js"></script>
+    <script src="/js/loan-manage.js"></script>
+  </body>
+</html>
